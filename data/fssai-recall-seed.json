@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "id": "REC-2026-001",
+    "noticeNumber": "FSSAI/ALERT/2026/08-A",
+    "productName": "Crunchy Masala Noodle Snack",
+    "brand": "TastyBites",
+    "batchNumbers": ["TB-2026-04A", "TB-2026-04B"],
+    "barcode": "8901234567890",
+    "reason": "Excessive levels of lead and undeclared artificial dye Tartrazine (INS 102) exceeding permissible limits.",
+    "hazardLevel": "HIGH",
+    "dateIssued": "2026-07-28",
+    "affectedRegions": ["Maharashtra", "Delhi NCR", "Karnataka", "Tamil Nadu"],
+    "actionRequired": "Do not consume. Return to retailer for full refund or dispose of safely.",
+    "officialNoticeUrl": "https://fssai.gov.in/notices/2026/alert-08a"
+  },
+  {
+    "id": "REC-2026-002",
+    "noticeNumber": "FSSAI/ALERT/2026/07-C",
+    "productName": "Creamy Almond Milk Shake 200ml",
+    "brand": "NutriFlow",
+    "batchNumbers": ["NF-AM-112"],
+    "barcode": "8909876543210",
+    "reason": "Presence of undeclared peanut protein due to cross-contamination on manufacturing line.",
+    "hazardLevel": "CRITICAL",
+    "dateIssued": "2026-07-15",
+    "affectedRegions": ["Pan-India"],
+    "actionRequired": "Severe allergy risk for persons with peanut allergies. Immediately discontinue use.",
+    "officialNoticeUrl": "https://fssai.gov.in/notices/2026/alert-07c"
+  },
+  {
+    "id": "REC-2026-003",
+    "noticeNumber": "FSSAI/ALERT/2026/06-F",
+    "productName": "Classic Potato Chips Salted",
+    "brand": "SnackTime",
+    "batchNumbers": ["ST-PC-890"],
+    "barcode": "8901112223334",
+    "reason": "Elevated peroxide levels indicating rancidity in frying oil batch.",
+    "hazardLevel": "MEDIUM",
+    "dateIssued": "2026-06-20",
+    "affectedRegions": ["Gujarat", "Rajasthan", "Madhya Pradesh"],
+    "actionRequired": "Dispose of product if batch ST-PC-890 matches packaging stamp.",
+    "officialNoticeUrl": "https://fssai.gov.in/notices/2026/alert-06f"
+  }
+]

@@ -1,1 +1,146 @@
-[]
+[
+  {
+    "id": "INS_211",
+    "insCode": "INS 211",
+    "name": "Sodium Benzoate",
+    "category": "Preservative",
+    "whatItIs": "Sodium benzoate is a synthetic sodium salt of benzoic acid widely used to prevent food spoilage.",
+    "whyAdded": "Extends shelf life significantly and inhibits the growth of mould, yeast, and bacteria in acidic foods and beverages at very low cost.",
+    "bodyEffect": "Processed safely by the liver in small quantities and excreted in urine. Can form trace benzene if combined with Vitamin C under heat.",
+    "frequencySafety": "Safe in moderation",
+    "healthierAlternatives": ["Citric acid", "Ascorbic acid (Vitamin C)", "Cold-pasteurization", "Natural essential oil extracts"],
+    "commonFoodsFoundIn": ["Fruit juices", "Carbonated soft drinks", "Pickles", "Salad dressings", "Sauces & condiments", "Jam"]
+  },
+  {
+    "id": "INS_621",
+    "insCode": "INS 621",
+    "name": "Monosodium Glutamate (MSG)",
+    "category": "Flavor Enhancer",
+    "whatItIs": "MSG is the sodium salt of glutamic acid, an amino acid naturally found in tomatoes, cheese, and mushrooms.",
+    "whyAdded": "Intensifies umami (savory) flavor profiles in ultra-processed foods, making low-cost formulations taste richer and more satisfying.",
+    "bodyEffect": "Digested like natural glutamate. Some sensitive individuals report mild transient flushing or headaches when consumed in high doses on an empty stomach.",
+    "frequencySafety": "Safe",
+    "healthierAlternatives": ["Nutritional yeast", "Mushroom extract", "Fermented soy sauce", "Naturally aged cheese"],
+    "commonFoodsFoundIn": ["Instant noodles", "Flavored potato chips", "Canned soups", "Frozen ready meals", "Seasoning mixes", "Fast food snacks"]
+  },
+  {
+    "id": "INS_102",
+    "insCode": "INS 102",
+    "name": "Tartrazine (FD&C Yellow No. 5)",
+    "category": "Color",
+    "whatItIs": "Tartrazine is a synthetic azo dye derived from petroleum that imparts a bright lemon-yellow color to foods.",
+    "whyAdded": "Restores visual color lost during high-temperature manufacturing and creates bright, appealing visual identity in confectionery.",
+    "bodyEffect": "Has been linked in European food studies to hyperactive behavior in sensitive children and rare allergic reactions (hives, asthma flare-ups).",
+    "frequencySafety": "Limit consumption",
+    "healthierAlternatives": ["Turmeric extract (Curcumin)", "Beta-carotene", "Saffron", "Annatto"],
+    "commonFoodsFoundIn": ["Yellow candy", "Flavored chips", "Carbonated yellow drinks", "Instant noodle seasonings", "Commercial baked goods"]
+  },
+  {
+    "id": "INS_330",
+    "insCode": "INS 330",
+    "name": "Citric Acid",
+    "category": "Acidity Regulator",
+    "whatItIs": "Citric acid is an organic acid naturally found in citrus fruits, produced commercially via fungal fermentation of molasses.",
+    "whyAdded": "Provides a tart, sour flavor, balances sweetness, and acts as an antioxidant and natural preservative.",
+    "bodyEffect": "Extremely safe; acts as an intermediate in human cellular energy production (Krebs cycle). High amounts may cause tooth enamel erosion.",
+    "frequencySafety": "Safe",
+    "healthierAlternatives": ["Lemon juice", "Tamarind extract", "Raw mango powder (Amchur)"],
+    "commonFoodsFoundIn": ["Fruit juices", "Soft drinks", "Jams & jellies", "Candies", "Canned vegetables", "Salty snacks"]
+  },
+  {
+    "id": "PALM_OIL",
+    "insCode": "N/A",
+    "name": "Palm Oil / Palmolein",
+    "category": "Fat/Oil",
+    "whatItIs": "Edible vegetable oil derived from the mesocarp of the fruit of oil palms.",
+    "whyAdded": "Provides high thermal stability for deep frying, resists oxidation/rancidity at room temperature, and gives crisp texture at a low manufacturing cost.",
+    "bodyEffect": "High in saturated fatty acids (~50%), which can elevate LDL (bad) cholesterol levels when consumed regularly in large amounts.",
+    "frequencySafety": "Limit consumption",
+    "healthierAlternatives": ["High-oleic sunflower oil", "Cold-pressed mustard oil", "Rice bran oil", "Extra virgin olive oil"],
+    "commonFoodsFoundIn": ["Fried packaged snacks", "Biscuits & cookies", "Instant noodles", "Margarine", "Packaged namkeen", "Chocolates"]
+  },
+  {
+    "id": "HFCS",
+    "insCode": "N/A",
+    "name": "High Fructose Corn Syrup / Invert Sugar",
+    "category": "Sweetener",
+    "whatItIs": "A liquid sweetener produced from corn starch that has been enzymatically processed to convert glucose into fructose.",
+    "whyAdded": "Cheaper and sweeter than cane sugar, blends effortlessly into liquids, retains moisture in baked goods, and prevents crystallization.",
+    "bodyEffect": "Metabolized predominantly by the liver. High consumption is strongly associated with insulin resistance, non-alcoholic fatty liver, and weight gain.",
+    "frequencySafety": "Limit consumption",
+    "healthierAlternatives": ["Raw honey", "Whole date paste", "Organic jaggery", "Stevia leaf extract"],
+    "commonFoodsFoundIn": ["Soft drinks", "Flavored yogurts", "Packaged cakes", "Breakfast cereals", "Ketchup & barbecue sauces"]
+  },
+  {
+    "id": "INS_202",
+    "insCode": "INS 202",
+    "name": "Potassium Sorbate",
+    "category": "Preservative",
+    "whatItIs": "Potassium salt of sorbic acid, naturally occurring in some berries, manufactured synthetically for food use.",
+    "whyAdded": "Inhibits molds and yeasts in a wide range of moisture-rich foods without altering taste or appearance.",
+    "bodyEffect": "Breaks down in the body into water and carbon dioxide just like naturally occurring fatty acids; non-toxic and well tolerated.",
+    "frequencySafety": "Safe",
+    "healthierAlternatives": ["Refrigeration", "Vacuum sealing", "Natural fermentation"],
+    "commonFoodsFoundIn": ["Cheese slices", "Packaged bread", "Wine", "Dried fruits", "Baked goods", "Fruit syrups"]
+  },
+  {
+    "id": "INS_150D",
+    "insCode": "INS 150d",
+    "name": "Caramel Color IV (Sulfite Ammonia Caramel)",
+    "category": "Color",
+    "whatItIs": "A dark brown coloring agent produced by heating carbohydrates in the presence of both sulfite and ammonium compounds.",
+    "whyAdded": "Gives deep brown hue to cola drinks and gravies, maintaining consistent appearance across large production batches.",
+    "bodyEffect": "Contains trace amounts of 4-MEI (4-methylimidazole), a byproduct formed during manufacturing. Regulatory agencies enforce strict safety limits.",
+    "frequencySafety": "Safe in moderation",
+    "healthierAlternatives": ["Roasted malt extract", "Natural fruit juice concentrates", "Molasses"],
+    "commonFoodsFoundIn": ["Cola beverages", "Dark beers", "Soy sauce", "Confectionery", "Gravy mixes"]
+  },
+  {
+    "id": "INS_322",
+    "insCode": "INS 322",
+    "name": "Soy Lecithin",
+    "category": "Emulsifier",
+    "whatItIs": "A mixture of phospholipids extracted from soybean oil processing.",
+    "whyAdded": "Prevents separation of water and oil phases, improves flow of melted chocolate, and extends freshness in bakery items.",
+    "bodyEffect": "A source of essential choline. Generally safe, though persons with severe soy allergies should exercise caution.",
+    "frequencySafety": "Safe",
+    "healthierAlternatives": ["Sunflower lecithin", "Egg yolk lecithin"],
+    "commonFoodsFoundIn": ["Chocolates", "Margarine", "Infant formulas", "Baked goods", "Protein powders"]
+  },
+  {
+    "id": "INS_415",
+    "insCode": "INS 415",
+    "name": "Xanthan Gum",
+    "category": "Stabilizer",
+    "whatItIs": "A soluble polysaccharide produced by fermentation of glucose or sucrose by Xanthomonas campestris bacteria.",
+    "whyAdded": "Increases liquid viscosity, prevents ingredient settling, and improves mouthfeel in low-fat or gluten-free products.",
+    "bodyEffect": "Acts as a dietary soluble fiber. Excess consumption may cause mild digestive bloating or laxative effect.",
+    "frequencySafety": "Safe",
+    "healthierAlternatives": ["Psyllium husk", "Flaxseed gel", "Chia seed mucilage", "Agar-agar"],
+    "commonFoodsFoundIn": ["Gluten-free bread", "Salad dressings", "Sauces", "Ice cream", "Plant-based milks"]
+  },
+  {
+    "id": "INS_319",
+    "insCode": "INS 319",
+    "name": "TBHQ (Tertiary Butylhydroquinone)",
+    "category": "Preservative",
+    "whatItIs": "A synthetic aromatic organic compound that acts as an antioxidant for unsaturated vegetable oils and animal fats.",
+    "whyAdded": "Prevents rancidity and oxidation of fats in ultra-processed snacks, extending shelf life up to 1-2 years.",
+    "bodyEffect": "High acute doses in animal studies showed potential cellular stress. Strictly regulated with maximum allowed limits in human food.",
+    "frequencySafety": "Limit consumption",
+    "healthierAlternatives": ["Mixed Tocopherols (Vitamin E)", "Rosemary extract", "Ascorbyl palmitate"],
+    "commonFoodsFoundIn": ["Packaged ramen noodles", "Frozen fish products", "Microwave popcorn", "Crackers", "Fried potato chips"]
+  },
+  {
+    "id": "TRANS_FAT",
+    "insCode": "N/A",
+    "name": "Hydrogenated Vegetable Oil (Trans Fat)",
+    "category": "Fat/Oil",
+    "whatItIs": "Fat produced by industrial hydrogenation of liquid vegetable oils into solid fats.",
+    "whyAdded": "Provides solid structure at room temperature and long shelf stability for commercial baking at low cost.",
+    "bodyEffect": "Significantly increases LDL (bad) cholesterol and decreases HDL (good) cholesterol, strongly raising cardiovascular disease risk.",
+    "frequencySafety": "Avoid if sensitive",
+    "healthierAlternatives": ["Pure Ghee", "Butter", "Cold-pressed coconut oil", "Unrefined vegetable oils"],
+    "commonFoodsFoundIn": ["Bakery shortenings", "Commercial puff pastry", "Vanaspati ghee snacks", "Packaged cookies"]
+  }
+]

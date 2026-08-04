@@ -1,12 +1,12 @@
 {
   "name": "nutri-lens-backend",
   "version": "1.0.0",
-  "description": "Nutri Lens API Backend - Person F Intelligence & User Services",
+  "description": "Nutri Lens API Backend (Person E & Person F Services)",
   "main": "dist/server.js",
   "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test:person-f": "ts-node src/scripts/test-person-f-services.ts"
   },
   "dependencies": {

@@ -1,9 +1,9 @@
 // Nutri Lens - Healthy Alternative & Smart Shopping Assistant Engine
 
-import { HealthyAlternative, Product, ProductComparison } from '../../../shared/types';
+import { HealthyAlternative, ProductWithNutrition, ProductComparison } from '../../../shared/types';
 
 export class ComparisonEngine {
-  public static compareProducts(productA: Product, productB: Product): ProductComparison {
+  public static compareProducts(productA: ProductWithNutrition, productB: ProductWithNutrition): ProductComparison {
     const points: ProductComparison['comparisonPoints'] = [];
 
     // 1. Nutrition comparison
@@ -68,7 +68,7 @@ export class ComparisonEngine {
     };
   }
 
-  public static getAlternative(scannedProduct: Product, alternativeProduct: Product): HealthyAlternative {
+  public static getAlternative(scannedProduct: ProductWithNutrition, alternativeProduct: ProductWithNutrition): HealthyAlternative {
     const sugarDiff = Math.max(0, Math.round(((scannedProduct.nutritionFacts.sugars - alternativeProduct.nutritionFacts.sugars) / Math.max(1, scannedProduct.nutritionFacts.sugars)) * 100));
     const sodiumDiff = Math.max(0, Math.round(((scannedProduct.nutritionFacts.sodium - alternativeProduct.nutritionFacts.sodium) / Math.max(1, scannedProduct.nutritionFacts.sodium)) * 100));
     const scoreImprovement = Math.max(0, alternativeProduct.overallScore - scannedProduct.overallScore);

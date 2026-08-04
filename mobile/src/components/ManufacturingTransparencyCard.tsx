@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { ManufacturingRationale } from '../../../shared/types';
+import { PersonDManufacturingRationale } from '../../../shared/types';
 
 interface Props {
-  summaries: ManufacturingRationale[];
+  summaries: PersonDManufacturingRationale[];
 }
 
 export const ManufacturingTransparencyCard: React.FC<Props> = ({ summaries }) => {
@@ -18,7 +18,7 @@ export const ManufacturingTransparencyCard: React.FC<Props> = ({ summaries }) =>
     );
   }
 
-  const getBadgeStyle = (purpose: ManufacturingRationale['primaryPurpose']) => {
+  const getBadgeStyle = (purpose: PersonDManufacturingRationale['primaryPurpose']) => {
     switch (purpose) {
       case 'cost':
         return { backgroundColor: '#FEF3C7', color: '#92400E', label: 'Cost Efficiency' };

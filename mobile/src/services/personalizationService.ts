@@ -1,10 +1,10 @@
 // Nutri Lens - Personalized Health Analysis & Manufacturing Transparency Engine
 
 import { ALLERGIES_META, HEALTH_CONDITIONS_META } from '../../../shared/constants';
-import { AllergyWarning, ConditionFlag, PersonalizedAnalysis, Product, UserProfile } from '../../../shared/types';
+import { AllergyWarning, ConditionFlag, PersonalizedAnalysis, ProductWithNutrition, UserProfile } from '../../../shared/types';
 
 export class PersonalizationEngine {
-  public static analyzeProduct(product: Product, userProfile: UserProfile): PersonalizedAnalysis {
+  public static analyzeProduct(product: ProductWithNutrition, userProfile: UserProfile): PersonalizedAnalysis {
     const conditionFlags: ConditionFlag[] = [];
     const allergyWarnings: AllergyWarning[] = [];
     let suitabilityDeductions = 0;

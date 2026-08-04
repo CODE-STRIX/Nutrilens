@@ -1,6 +1,6 @@
 // Nutri Lens - Mock Data for Mobile Application (Person D Scope & Testing)
 
-import { LearningLesson, Product, ScanHistoryEntry, UserProfile } from '../../../shared/types';
+import { LearningLesson, ProductWithNutrition, ScanHistoryEntry, UserProfile } from '../../../shared/types';
 
 export const SAMPLE_USER_PROFILE: UserProfile = {
   id: 'user_001',
@@ -13,7 +13,7 @@ export const SAMPLE_USER_PROFILE: UserProfile = {
   dailyScanLimit: 10,
 };
 
-export const MOCK_PRODUCTS: Record<string, Product> = {
+export const MOCK_PRODUCTS: Record<string, ProductWithNutrition> = {
   p_maggi: {
     id: 'p_maggi',
     barcode: '8901058000053',
@@ -251,7 +251,7 @@ export const MOCK_PRODUCTS: Record<string, Product> = {
   },
 };
 
-export const MOCK_HEALTHY_ALTERNATIVES: Record<string, Product> = {
+export const MOCK_HEALTHY_ALTERNATIVES: Record<string, ProductWithNutrition> = {
   p_maggi: MOCK_PRODUCTS.p_muesli,
 };
 

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "lesson-sodium-hypertension",
+    "title": "Understanding Sodium & Blood Pressure",
+    "category": "Cardiovascular & Metabolic Health",
+    "triggerKey": "HIGH_SODIUM",
+    "conceptHeadline": "Why 100mg excess sodium daily raises long-term cardiovascular risk",
+    "quickSummary": "Sodium is essential for nerve transmission, but excess intake causes extracellular fluid retention, raising vascular pressure against artery walls.",
+    "detailedScience": "When dietary sodium exceeds 2,000mg per day, the kidneys retain water to balance osmotic concentration in the bloodstream. Over time, this fluid volume increase puts continuous stress on blood vessels, leading to arterial stiffness and essential hypertension.",
+    "keyTakeaway": "Always check sodium per serving. If managing high blood pressure, target <140mg sodium per serving.",
+    "readTimeMinutes": 2
+  },
+  {
+    "id": "lesson-ins-211-preservative",
+    "title": "Sodium Benzoate (INS 211): What You Need to Know",
+    "category": "Additives & Preservatives",
+    "triggerKey": "INS_211",
+    "conceptHeadline": "How preservatives extend shelf life and when to avoid them",
+    "quickSummary": "INS 211 stops bacterial and fungal growth in acidic foods, but high consumption in combination with Vitamin C (Ascorbic Acid) requires attention.",
+    "detailedScience": "Sodium Benzoate inhibits cellular respiration in yeast and mold cells by lowering intracellular pH. While deemed GRAS (Generally Recognized As Safe) in trace amounts, exposure to heat in ascorbic-acid-containing beverages can form trace benzene.",
+    "keyTakeaway": "Moderate your intake of carbonated sodas and packaged fruit juices containing INS 211 + Vitamin C.",
+    "readTimeMinutes": 3
+  },
+  {
+    "id": "lesson-dietary-fibre",
+    "title": "Dietary Fibre: The Unsung Nutrient",
+    "category": "Macro & Micro Nutrients",
+    "triggerKey": "FIBER",
+    "conceptHeadline": "Soluble vs. insoluble fibre: slowing sugar absorption and nourishing gut microbiota",
+    "quickSummary": "Fibre adds bulk to digestion, blunts blood glucose spikes after meals, and feeds beneficial gut bacteria.",
+    "detailedScience": "Soluble fibre dissolves in digestive fluids to form a gel-like matrix, delaying gastric emptying and flattening blood glucose curves. Insoluble fibre speeds intestinal transit and prevents constipation.",
+    "keyTakeaway": "Aim for at least 25g - 30g of total dietary fibre daily through whole grains, legumes, and vegetables.",
+    "readTimeMinutes": 2
+  },
+  {
+    "id": "lesson-trans-fats",
+    "title": "Trans Fats & Hydrogenated Oils",
+    "category": "Cardiovascular & Metabolic Health",
+    "triggerKey": "TRANS_FAT",
+    "conceptHeadline": "Why partially hydrogenated oils are banned in many countries",
+    "quickSummary": "Trans fatty acids raise LDL (bad) cholesterol while simultaneously lowering HDL (good) cholesterol.",
+    "detailedScience": "Industrial trans fats are created by bubbling hydrogen gas through vegetable oils at elevated temperatures. Unlike cis-unsaturated fats, trans fats fit tightly into cell membranes, damaging endothelial linings and triggering systemic inflammation.",
+    "keyTakeaway": "If an ingredient list mentions 'partially hydrogenated vegetable oil' or 'bakery shortening', skip the product.",
+    "readTimeMinutes": 3
+  },
+  {
+    "id": "lesson-ins-621-msg",
+    "title": "Monosodium Glutamate (INS 621 / MSG)",
+    "category": "Additives & Preservatives",
+    "triggerKey": "INS_621",
+    "conceptHeadline": "Umami flavor enhancer: myths vs. physiological realities",
+    "quickSummary": "MSG provides deep savory umami taste by triggering glutamate receptors on the tongue.",
+    "detailedScience": "Glutamate is a naturally occurring amino acid found in tomatoes, aged cheeses, and mushrooms. INS 621 delivers sodium-bound glutamate. While non-toxic, it can cause transient flushing or headache in sensitive individuals and often accompanies high-sodium ultra-processed foods.",
+    "keyTakeaway": "MSG itself is non-toxic, but foods high in INS 621 are frequently ultra-processed and elevated in sodium.",
+    "readTimeMinutes": 2
+  }
+]

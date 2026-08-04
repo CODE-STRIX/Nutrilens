@@ -1,0 +1,237 @@
+[
+  {
+    "id": "prod-maggi-2min",
+    "barcode": "8901058852011",
+    "name": "Maggi 2-Minute Masala Noodles",
+    "brand": "Nestlé",
+    "category": "Instant Noodles",
+    "imageUrl": "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=400",
+    "isRegionalUnbranded": false,
+    "overallBaseScore": 42,
+    "nutrition": {
+      "servingSize": "70g",
+      "calories": 310,
+      "totalFatGrams": 11.5,
+      "saturatedFatGrams": 5.2,
+      "transFatGrams": 0.05,
+      "sodiumMg": 850,
+      "totalCarbsGrams": 44.5,
+      "sugarGrams": 1.5,
+      "addedSugarGrams": 0.5,
+      "fiberGrams": 2.1,
+      "proteinGrams": 6.8
+    },
+    "ingredients": [
+      {
+        "name": "Refined Wheat Flour (Maida)",
+        "isAdditive": false,
+        "purpose": "Primary noodle base"
+      },
+      {
+        "name": "Palm Oil",
+        "insCode": "PALM_OIL",
+        "isAdditive": true,
+        "purpose": "Frying & shelf stability",
+        "additiveDetails": {
+          "code": "PALM_OIL",
+          "name": "Refined Palm Oil",
+          "category": "Emulsifier",
+          "hazardRating": "Caution",
+          "description": "High saturated fat oil extracted from oil palm fruit.",
+          "manufacturingRationale": "Low cost at mass scale, high resistance to oxidative rancidity.",
+          "biologicalImpact": "High in saturated palmitic acid, raising serum LDL cholesterol if consumed frequently.",
+          "safeFrequency": "Limit to occasional consumption.",
+          "healthierAlternatives": ["Cold-pressed Mustard Oil", "Extra Virgin Olive Oil"],
+          "commonFoods": ["Biscuits", "Instant Noodles", "Chips"]
+        }
+      },
+      {
+        "name": "Sodium Benzoate",
+        "insCode": "INS_211",
+        "isAdditive": true,
+        "purpose": "Preservative",
+        "additiveDetails": {
+          "code": "INS_211",
+          "name": "Sodium Benzoate",
+          "category": "Preservative",
+          "hazardRating": "Caution",
+          "description": "Anti-microbial preservative.",
+          "manufacturingRationale": "Prevents mold and bacterial deterioration during long supply chain transit.",
+          "biologicalImpact": "Generally safe in regulated amounts; may cause mild hives or digestive sensitivity in hyper-responders.",
+          "safeFrequency": "Consume in moderation.",
+          "healthierAlternatives": ["Citric Acid (INS 330)", "Vacuum Packaging"],
+          "commonFoods": ["Sauces", "Pickles", "Sodas"]
+        }
+      },
+      {
+        "name": "Monosodium Glutamate (MSG)",
+        "insCode": "INS_621",
+        "isAdditive": true,
+        "purpose": "Flavor Enhancer",
+        "additiveDetails": {
+          "code": "INS_621",
+          "name": "Monosodium Glutamate",
+          "category": "Flavor Enhancer",
+          "hazardRating": "Safe",
+          "description": "Umami flavor compound.",
+          "manufacturingRationale": "Enhances savory taste profile cheaply.",
+          "biologicalImpact": "Triggers umami taste receptors; non-toxic but associated with high-sodium processed foods.",
+          "safeFrequency": "Safe in standard dietary quantities.",
+          "healthierAlternatives": ["Yeast Extract", "Mushroom Powder"],
+          "commonFoods": ["Instant Soups", "Chips", "Savory Snacks"]
+        }
+      }
+    ],
+    "manufacturingTransparency": {
+      "costEfficiency": "Refined flour and palm oil minimize raw material cost per 70g pack.",
+      "shelfLifeImpact": "Dehydration combined with INS 211 ensures 9-month room temperature shelf life.",
+      "textureAndMouthfeel": "Flash-frying in palm oil produces porous noodles that rehydrate rapidly in 2 minutes."
+    }
+  },
+  {
+    "id": "prod-muesli-whole-grain",
+    "barcode": "8901058852999",
+    "name": "Whole Grain Millet & Fruit Muesli",
+    "brand": "TrueElements",
+    "category": "Instant Noodles",
+    "imageUrl": "https://images.unsplash.com/photo-1517673400267-0251440c45dc?w=400",
+    "isRegionalUnbranded": false,
+    "overallBaseScore": 88,
+    "nutrition": {
+      "servingSize": "50g",
+      "calories": 190,
+      "totalFatGrams": 3.2,
+      "saturatedFatGrams": 0.5,
+      "transFatGrams": 0,
+      "sodiumMg": 45,
+      "totalCarbsGrams": 34.0,
+      "sugarGrams": 4.5,
+      "addedSugarGrams": 0,
+      "fiberGrams": 7.5,
+      "proteinGrams": 7.2
+    },
+    "ingredients": [
+      {
+        "name": "Rolled Oats",
+        "isAdditive": false,
+        "purpose": "Whole grain base"
+      },
+      {
+        "name": "Ragi Flakes",
+        "isAdditive": false,
+        "purpose": "Millet fiber & calcium"
+      },
+      {
+        "name": "Dried Cranberries",
+        "isAdditive": false,
+        "purpose": "Natural sweetness"
+      },
+      {
+        "name": "Almonds & Pumpkin Seeds",
+        "isAdditive": false,
+        "purpose": "Healthy fats & micronutrients"
+      }
+    ],
+    "manufacturingTransparency": {
+      "costEfficiency": "Higher raw ingredient cost due to whole almonds and ragi flakes.",
+      "shelfLifeImpact": "Nitrogen flushing prevents lipid oxidation naturally without artificial preservatives.",
+      "textureAndMouthfeel": "Crunchy seed and grain mix delivers natural fiber texture."
+    }
+  },
+  {
+    "id": "prod-lays-magic-masala",
+    "barcode": "8901491101820",
+    "name": "Lay's India's Magic Masala Potato Chips",
+    "brand": "PepsiCo",
+    "category": "Potato Chips",
+    "imageUrl": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400",
+    "isRegionalUnbranded": false,
+    "overallBaseScore": 38,
+    "nutrition": {
+      "servingSize": "30g",
+      "calories": 165,
+      "totalFatGrams": 10.2,
+      "saturatedFatGrams": 4.1,
+      "transFatGrams": 0.02,
+      "sodiumMg": 240,
+      "totalCarbsGrams": 16.5,
+      "sugarGrams": 1.2,
+      "addedSugarGrams": 0.8,
+      "fiberGrams": 1.0,
+      "proteinGrams": 2.1
+    },
+    "ingredients": [
+      {
+        "name": "Potato",
+        "isAdditive": false
+      },
+      {
+        "name": "Palmolein Oil",
+        "insCode": "PALM_OIL",
+        "isAdditive": true,
+        "purpose": "Frying oil"
+      },
+      {
+        "name": "Spice Mix & Salt",
+        "isAdditive": false
+      },
+      {
+        "name": "Monosodium Glutamate",
+        "insCode": "INS_621",
+        "isAdditive": true,
+        "purpose": "Flavor Enhancer"
+      }
+    ],
+    "manufacturingTransparency": {
+      "costEfficiency": "Palmolein oil is cost-effective for batch continuous fryers.",
+      "shelfLifeImpact": "Low moisture packaging maintains chip crispness for 6 months.",
+      "textureAndMouthfeel": "Thin slice fried potato gives classic crisp mouthfeel."
+    }
+  },
+  {
+    "id": "prod-bikaner-local-sev",
+    "barcode": "8908001234567",
+    "name": "Local Bikaneri Besan Sev",
+    "brand": "Shree Ram Namkeen",
+    "category": "Potato Chips",
+    "imageUrl": "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=400",
+    "isRegionalUnbranded": true,
+    "overallBaseScore": 55,
+    "nutrition": {
+      "servingSize": "30g",
+      "calories": 150,
+      "totalFatGrams": 9.0,
+      "saturatedFatGrams": 2.5,
+      "transFatGrams": 0,
+      "sodiumMg": 310,
+      "totalCarbsGrams": 14.0,
+      "sugarGrams": 0.5,
+      "addedSugarGrams": 0,
+      "fiberGrams": 2.5,
+      "proteinGrams": 4.0
+    },
+    "ingredients": [
+      {
+        "name": "Gram Flour (Besan)",
+        "isAdditive": false
+      },
+      {
+        "name": "Groundnut Oil",
+        "isAdditive": false
+      },
+      {
+        "name": "Black Pepper & Salt",
+        "isAdditive": false
+      },
+      {
+        "name": "Asafoetida (Hing)",
+        "isAdditive": false
+      }
+    ],
+    "manufacturingTransparency": {
+      "costEfficiency": "Traditional small batch frying in groundnut oil.",
+      "shelfLifeImpact": "Fried chickpea flour retains crispness for 3 months.",
+      "textureAndMouthfeel": "Savory, aromatic crunch from pepper and hing."
+    }
+  }
+]

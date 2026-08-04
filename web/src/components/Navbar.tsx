@@ -5,14 +5,25 @@ import {
   BarChart3, 
   BookOpen, 
   Sparkles,
-  User,
-  Heart,
-  AlertTriangle
+  AlertTriangle,
+  Users,
+  ArrowLeftRight,
+  UserCircle2
 } from 'lucide-react';
 
+export type AppTab = 
+  | 'dashboard' 
+  | 'patterns' 
+  | 'intelligence' 
+  | 'recalls' 
+  | 'learning'
+  | 'profile'
+  | 'community'
+  | 'alternatives';
+
 interface NavbarProps {
-  activeTab: 'dashboard' | 'patterns' | 'intelligence' | 'recalls' | 'learning';
-  setActiveTab: (tab: 'dashboard' | 'patterns' | 'intelligence' | 'recalls' | 'learning') => void;
+  activeTab: AppTab;
+  setActiveTab: (tab: AppTab) => void;
   recallCount: number;
 }
 
@@ -38,12 +49,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, recallC
                   SIH 2026
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">AI Food Safety & Ingredient Intelligence</p>
+              <p className="text-[11px] text-slate-400 hidden sm:block">AI Food Safety &amp; Ingredient Intelligence</p>
             </div>
           </div>
 
-          {/* Navigation Tabs (Person A Scope) */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
+          {/* Navigation Tabs — Person A + Person B */}
+          <nav className="hidden md:flex items-center gap-1 bg-slate-900/60 p-1.5 rounded-xl border border-slate-800 overflow-x-auto">
+            {/* Person A tabs */}
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -65,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, recallC
               }`}
             >
               <BarChart3 className="w-4 h-4" />
-              Pattern Intelligence
+              Patterns
             </button>
 
             <button
@@ -77,7 +89,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, recallC
               }`}
             >
               <Sparkles className="w-4 h-4" />
-              Product Intelligence
+              Intelligence
             </button>
 
             <button
@@ -89,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, recallC
               }`}
             >
               <ShieldAlert className="w-4 h-4 text-rose-400" />
-              Recall Safety Net
+              Recalls
               {recallCount > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-rose-500 text-white rounded-full animate-bounce">
                   {recallCount}
@@ -106,7 +118,47 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, recallC
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              Learning Library
+              Learning
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-slate-700 mx-1" />
+
+            {/* Person B tabs */}
+            <button
+              onClick={() => setActiveTab('community')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'community'
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              Community
+            </button>
+
+            <button
+              onClick={() => setActiveTab('alternatives')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'alternatives'
+                  ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              <ArrowLeftRight className="w-4 h-4" />
+              Alternatives
+            </button>
+
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'profile'
+                  ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              <UserCircle2 className="w-4 h-4" />
+              Profile
             </button>
           </nav>
 
@@ -135,6 +187,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, recallC
         <button onClick={() => setActiveTab('intelligence')} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${activeTab === 'intelligence' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400'}`}>Product Search</button>
         <button onClick={() => setActiveTab('recalls')} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${activeTab === 'recalls' ? 'bg-rose-500/20 text-rose-400' : 'text-slate-400'}`}>Recalls ({recallCount})</button>
         <button onClick={() => setActiveTab('learning')} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${activeTab === 'learning' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400'}`}>Learning</button>
+        <button onClick={() => setActiveTab('community')} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${activeTab === 'community' ? 'bg-amber-500/20 text-amber-400' : 'text-slate-400'}`}>Community</button>
+        <button onClick={() => setActiveTab('alternatives')} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${activeTab === 'alternatives' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400'}`}>Alternatives</button>
+        <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-medium ${activeTab === 'profile' ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400'}`}>Profile</button>
       </div>
     </header>
   );

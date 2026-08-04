@@ -1,8 +1,22 @@
-import { Product } from '../../../../shared/types/product';
+import { Product, NutritionFacts } from '../../../../shared/types/product';
 import { UserProfile } from '../../../../shared/types/user';
 import { AlternativeRecommendation } from '../../../../shared/types/personalization';
 import { PersonalizationEngine } from './personalizationEngine';
 import sampleProducts from '../../../data/indian-food-products.json';
+
+const defaultNutrition: NutritionFacts = {
+  servingSize: '100g',
+  calories: 0,
+  totalFatGrams: 0,
+  saturatedFatGrams: 0,
+  transFatGrams: 0,
+  sodiumMg: 0,
+  totalCarbsGrams: 0,
+  sugarGrams: 0,
+  addedSugarGrams: 0,
+  fiberGrams: 0,
+  proteinGrams: 0
+};
 
 export const AlternativeEngine = {
   findAlternative: (product: Product, user: UserProfile): AlternativeRecommendation | null => {
@@ -37,24 +51,29 @@ export const AlternativeEngine = {
 const buildRecommendation = (original: Product, candidate: Product, candidatePersonalizedScore: number): AlternativeRecommendation => {
   const keyImprovements: string[] = [];
 
-  if (candidate.nutrition.sodiumMg < original.nutrition.sodiumMg) {
-    const sodiumDrop = Math.round(((original.nutrition.sodiumMg - candidate.nutrition.sodiumMg) / original.nutrition.sodiumMg) * 100);
+  const origNut = original.nutrition || defaultNutrition;
+  const candNut = candidate.nutrition || defaultNutrition;
+
+  if (candNut.sodiumMg < origNut.sodiumMg && origNut.sodiumMg > 0) {
+    const sodiumDrop = Math.round(((origNut.sodiumMg - candNut.sodiumMg) / origNut.sodiumMg) * 100);
     keyImprovements.push(`${sodiumDrop}% less sodium`);
   }
 
-  if (candidate.nutrition.sugarGrams < original.nutrition.sugarGrams) {
-    keyImprovements.push(`Lower sugar content (${candidate.nutrition.sugarGrams}g vs ${original.nutrition.sugarGrams}g)`);
+  if (candNut.sugarGrams < origNut.sugarGrams) {
+    keyImprovements.push(`Lower sugar content (${candNut.sugarGrams}g vs ${origNut.sugarGrams}g)`);
   }
 
-  if (candidate.nutrition.fiberGrams > original.nutrition.fiberGrams) {
-    keyImprovements.push(`${candidate.nutrition.fiberGrams}g fiber per serving`);
+  if (candNut.fiberGrams > origNut.fiberGrams) {
+    keyImprovements.push(`${candNut.fiberGrams}g fiber per serving`);
   }
 
-  const hasOriginalAdditives = original.ingredients.some(i => i.isAdditive);
-  const hasCandidateAdditives = candidate.ingredients.some(i => i.isAdditive);
+  const hasOriginalAdditives = (original.ingredients || []).some(i => i.isAdditive);
+  const hasCandidateAdditives = (candidate.ingredients || []).some(i => i.isAdditive);
   if (hasOriginalAdditives && !hasCandidateAdditives) {
     keyImprovements.push('No artificial additives or preservatives');
   }
+
+  const origScore = original.overallBaseScore ?? original.overallScore ?? 50;
 
   return {
     originalProductId: original.id,
@@ -62,6 +81,6 @@ const buildRecommendation = (original: Product, candidate: Product, candidatePer
     recommendedProduct: candidate,
     personalizedScore: candidatePersonalizedScore,
     keyImprovements,
-    verdict: `Switching to ${candidate.name} increases your personalized health score from ${original.overallBaseScore} to ${candidatePersonalizedScore}.`
+    verdict: `Switching to ${candidate.name} increases your personalized health score from ${origScore} to ${candidatePersonalizedScore}.`
   };
 };

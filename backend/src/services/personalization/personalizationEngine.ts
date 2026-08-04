@@ -1,4 +1,4 @@
-import { Product } from '../../../../shared/types/product';
+import { Product, NutritionFacts } from '../../../../shared/types/product';
 import { UserProfile, HealthCondition, Allergy, DietaryGoal } from '../../../../shared/types/user';
 import { 
   PersonalizedAnalysisResult, 
@@ -7,15 +7,30 @@ import {
   GoalCompliance 
 } from '../../../../shared/types/personalization';
 
+const defaultNutrition: NutritionFacts = {
+  servingSize: '100g',
+  calories: 0,
+  totalFatGrams: 0,
+  saturatedFatGrams: 0,
+  transFatGrams: 0,
+  sodiumMg: 0,
+  totalCarbsGrams: 0,
+  sugarGrams: 0,
+  addedSugarGrams: 0,
+  fiberGrams: 0,
+  proteinGrams: 0
+};
+
 export const PersonalizationEngine = {
   analyzeProductForUser: (product: Product, user: UserProfile): PersonalizedAnalysisResult => {
-    let score = product.overallBaseScore;
+    let score = product.overallBaseScore ?? product.overallScore ?? 50;
     const conditionFlags: ConditionFlag[] = [];
     const allergenAlerts: AllergenAlert[] = [];
     const goalCompliance: GoalCompliance[] = [];
     const keyRiskIngredients: string[] = [];
 
-    const { nutrition, ingredients } = product;
+    const nutrition = product.nutrition || defaultNutrition;
+    const ingredients = product.ingredients || [];
 
     // 1. ALLERGY CHECK (Highest priority - safety critical)
     user.allergies.forEach((allergy: Allergy) => {
@@ -197,11 +212,13 @@ export const PersonalizationEngine = {
       plainLanguageVerdict = `💡 CONSUME IN MODERATION: High in sodium or additives. Pair with high-fiber whole foods.`;
     }
 
+    const baseScore = product.overallBaseScore ?? product.overallScore ?? 50;
+
     return {
       productId: product.id,
       productName: product.name,
       brand: product.brand,
-      baseScore: product.overallBaseScore,
+      baseScore,
       personalizedScore: finalScore,
       safetyTier,
       summaryHeadline,

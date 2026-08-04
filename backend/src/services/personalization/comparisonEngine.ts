@@ -1,12 +1,32 @@
-import { Product } from '../../../../shared/types/product';
+import { Product, NutritionFacts } from '../../../../shared/types/product';
 import { UserProfile } from '../../../../shared/types/user';
 import { ComparisonResult, ComparisonMetric } from '../../../../shared/types/personalization';
 import { PersonalizationEngine } from './personalizationEngine';
+
+const defaultNutrition: NutritionFacts = {
+  servingSize: '100g',
+  calories: 0,
+  totalFatGrams: 0,
+  saturatedFatGrams: 0,
+  transFatGrams: 0,
+  sodiumMg: 0,
+  totalCarbsGrams: 0,
+  sugarGrams: 0,
+  addedSugarGrams: 0,
+  fiberGrams: 0,
+  proteinGrams: 0
+};
 
 export const ComparisonEngine = {
   compareProducts: (productA: Product, productB: Product, user: UserProfile): ComparisonResult => {
     const analysisA = PersonalizationEngine.analyzeProductForUser(productA, user);
     const analysisB = PersonalizationEngine.analyzeProductForUser(productB, user);
+
+    const nutA = productA.nutrition || defaultNutrition;
+    const nutB = productB.nutrition || defaultNutrition;
+
+    const ingA = productA.ingredients || [];
+    const ingB = productB.ingredients || [];
 
     const metrics: ComparisonMetric[] = [];
 
@@ -22,21 +42,21 @@ export const ComparisonEngine = {
     // 2. Sodium Metric
     metrics.push({
       metricName: 'Sodium (mg)',
-      productAValue: `${productA.nutrition.sodiumMg}mg`,
-      productBValue: `${productB.nutrition.sodiumMg}mg`,
-      betterProduct: productA.nutrition.sodiumMg < productB.nutrition.sodiumMg ? 'A' : (productB.nutrition.sodiumMg < productA.nutrition.sodiumMg ? 'B' : 'EQUAL'),
-      explanation: productA.nutrition.sodiumMg < productB.nutrition.sodiumMg 
-        ? `${productA.name} contains ${productB.nutrition.sodiumMg - productA.nutrition.sodiumMg}mg less sodium.`
-        : `${productB.name} contains ${productA.nutrition.sodiumMg - productB.nutrition.sodiumMg}mg less sodium.`
+      productAValue: `${nutA.sodiumMg}mg`,
+      productBValue: `${nutB.sodiumMg}mg`,
+      betterProduct: nutA.sodiumMg < nutB.sodiumMg ? 'A' : (nutB.sodiumMg < nutA.sodiumMg ? 'B' : 'EQUAL'),
+      explanation: nutA.sodiumMg < nutB.sodiumMg 
+        ? `${productA.name} contains ${nutB.sodiumMg - nutA.sodiumMg}mg less sodium.`
+        : `${productB.name} contains ${nutA.sodiumMg - nutB.sodiumMg}mg less sodium.`
     });
 
     // 3. Sugar Metric
     metrics.push({
       metricName: 'Total Sugar (g)',
-      productAValue: `${productA.nutrition.sugarGrams}g`,
-      productBValue: `${productB.nutrition.sugarGrams}g`,
-      betterProduct: productA.nutrition.sugarGrams < productB.nutrition.sugarGrams ? 'A' : (productB.nutrition.sugarGrams < productA.nutrition.sugarGrams ? 'B' : 'EQUAL'),
-      explanation: productA.nutrition.sugarGrams < productB.nutrition.sugarGrams
+      productAValue: `${nutA.sugarGrams}g`,
+      productBValue: `${nutB.sugarGrams}g`,
+      betterProduct: nutA.sugarGrams < nutB.sugarGrams ? 'A' : (nutB.sugarGrams < nutA.sugarGrams ? 'B' : 'EQUAL'),
+      explanation: nutA.sugarGrams < nutB.sugarGrams
         ? `${productA.name} has lower sugar content.`
         : `${productB.name} has lower sugar content.`
     });
@@ -44,17 +64,17 @@ export const ComparisonEngine = {
     // 4. Fiber Metric
     metrics.push({
       metricName: 'Dietary Fiber (g)',
-      productAValue: `${productA.nutrition.fiberGrams}g`,
-      productBValue: `${productB.nutrition.fiberGrams}g`,
-      betterProduct: productA.nutrition.fiberGrams > productB.nutrition.fiberGrams ? 'A' : (productB.nutrition.fiberGrams > productA.nutrition.fiberGrams ? 'B' : 'EQUAL'),
-      explanation: productA.nutrition.fiberGrams > productB.nutrition.fiberGrams
-        ? `${productA.name} provides ${productA.nutrition.fiberGrams - productB.nutrition.fiberGrams}g more fiber.`
-        : `${productB.name} provides ${productB.nutrition.fiberGrams - productA.nutrition.fiberGrams}g more fiber.`
+      productAValue: `${nutA.fiberGrams}g`,
+      productBValue: `${nutB.fiberGrams}g`,
+      betterProduct: nutA.fiberGrams > nutB.fiberGrams ? 'A' : (nutB.fiberGrams > nutA.fiberGrams ? 'B' : 'EQUAL'),
+      explanation: nutA.fiberGrams > nutB.fiberGrams
+        ? `${productA.name} provides ${nutA.fiberGrams - nutB.fiberGrams}g more fiber.`
+        : `${productB.name} provides ${nutB.fiberGrams - nutA.fiberGrams}g more fiber.`
     });
 
     // 5. Additives Count
-    const additivesCountA = productA.ingredients.filter(i => i.isAdditive).length;
-    const additivesCountB = productB.ingredients.filter(i => i.isAdditive).length;
+    const additivesCountA = ingA.filter(i => i.isAdditive).length;
+    const additivesCountB = ingB.filter(i => i.isAdditive).length;
 
     metrics.push({
       metricName: 'Artificial Additives',

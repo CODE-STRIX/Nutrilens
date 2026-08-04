@@ -33,3 +33,19 @@ export interface UserRecallAlert {
   actionRequired: string;
   isRead: boolean;
 }
+
+/** Display-ready recall notice for Web & Mobile consumers */
+export interface RecallAlert {
+  id: string;
+  title: string;
+  productName: string;
+  brand: string;
+  barcode?: string;
+  affectedBatches?: string[];
+  hazardLevel: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  reason: string;
+  announcementDate: string;
+  actionRequired: string;
+  fssaiNoticeUrl?: string;
+  isMatchedInUserHistory?: boolean;
+}

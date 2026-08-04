@@ -4,18 +4,19 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@shared': path.resolve(__dirname, '../shared'),
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   server: {
     port: 3000,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
-        changeOrigin: true
-      }
-    }
+        changeOrigin: true,
+      },
+    },
   },
-  resolve: {
-    alias: {
-      '@shared': path.resolve(__dirname, '../shared')
-    }
-  }
 });

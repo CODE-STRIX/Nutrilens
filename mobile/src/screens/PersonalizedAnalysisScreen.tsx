@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ManufacturingTransparencyCard } from '../components/ManufacturingTransparencyCard';
 import { PersonalizedHealthBanner } from '../components/PersonalizedHealthBanner';
 import { PersonalizationEngine } from '../services/personalizationService';
+import { MlService, MlHealthRankResult, MlAlternativeResult } from '../services/mlService';
 import { UserProfile } from '../../../shared/types';
 import { MOCK_PRODUCTS } from '../services/mockData';
 
@@ -14,7 +15,40 @@ export const PersonalizedAnalysisScreen: React.FC<Props> = ({ userProfile }) => 
   const [selectedProductId, setSelectedProductId] = useState<string>('p_maggi');
   const currentProduct = MOCK_PRODUCTS[selectedProductId] || MOCK_PRODUCTS.p_maggi;
 
+  // Local rule-based analysis (always available)
   const analysis = PersonalizationEngine.analyzeProduct(currentProduct, userProfile);
+
+  // Model 3 & 4: ML-powered health ranking + alternative recommendation
+  const [mlRank, setMlRank] = useState<MlHealthRankResult | null>(null);
+  const [mlAlt, setMlAlt] = useState<MlAlternativeResult | null>(null);
+  const [mlLoading, setMlLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const runMlAnalysis = async () => {
+      setMlLoading(true);
+      setMlRank(null);
+      setMlAlt(null);
+      try {
+        const product = currentProduct as any;
+        const user = userProfile as any;
+        const [rankResult, altResult] = await Promise.all([
+          MlService.rankProductForUser(product, user),
+          MlService.getSmartAlternative(product, user),
+        ]);
+        if (!cancelled) {
+          setMlRank(rankResult);
+          setMlAlt(altResult);
+        }
+      } catch {
+        // Silently continue with local analysis
+      } finally {
+        if (!cancelled) setMlLoading(false);
+      }
+    };
+    runMlAnalysis();
+    return () => { cancelled = true; };
+  }, [selectedProductId]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

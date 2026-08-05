@@ -289,3 +289,64 @@ export const api = {
     }
   }
 };
+
+// ── ML Intelligence Models API Client ────────────────────────────────────────
+export const mlApi = {
+  parseOcrText: async (ocrText: string): Promise<any> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/ml/parse-ocr`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ocrText })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.data;
+      }
+    } catch (e) {
+      console.warn('[ML API Client] Backend ML endpoint offline, returning fallback OCR parse.', e);
+    }
+    return {
+      rawText: ocrText,
+      extractedIngredients: [],
+      detectedINSAdditives: [],
+      detectedAllergens: [],
+      confidenceScore: 0.85
+    };
+  },
+
+  rankHealthRisk: async (product: Product, user: UserProfile): Promise<PersonalizedAnalysisResult> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/ml/rank-health`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product, user })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.data;
+      }
+    } catch (e) {
+      console.warn('[ML API Client] Backend ML endpoint offline, using local ranking.', e);
+    }
+    return WebApiService.analyzeProduct(product.id, user.id);
+  },
+
+  recommendAlternative: async (product: Product, user: UserProfile): Promise<AlternativeRecommendation | null> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/ml/recommend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product, user })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.data;
+      }
+    } catch (e) {
+      console.warn('[ML API Client] Backend ML endpoint offline, using local recommendation.', e);
+    }
+    return api.getHealthyAlternative(product.id);
+  }
+};
+

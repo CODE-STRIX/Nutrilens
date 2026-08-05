@@ -13,12 +13,17 @@ import { WebApiService } from './services/api';
 import { ProgressDashboardData, PatternIntelligenceReport, RecallAlert } from '@shared/types';
 
 export const App: React.FC = () => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [targetProductId, setTargetProductId] = useState<string | undefined>(undefined);
   const [dashboardData, setDashboardData] = useState<ProgressDashboardData | null>(null);
   const [patternReport, setPatternReport] = useState<PatternIntelligenceReport | null>(null);
   const [recalls, setRecalls] = useState<RecallAlert[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const initAppData = async () => {
@@ -38,24 +43,31 @@ export const App: React.FC = () => {
     initAppData();
   }, []);
 
+  const handleToggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   const handleNavigateToIntelligence = (productId?: string) => {
     setTargetProductId(productId);
     setActiveTab('intelligence');
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen flex flex-col font-sans transition-colors duration-300">
       
       {/* Top Navbar */}
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         recallCount={recalls.length}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+        onSearchProduct={handleNavigateToIntelligence}
       />
 
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Person A tabs: show loading spinner only for data-dependent tabs */}
+        {/* Loading spinner */}
         {loading && ['dashboard', 'patterns'].includes(activeTab) ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
             <div className="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
@@ -63,12 +75,15 @@ export const App: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* ── Person A Tabs ── */}
+            {/* ── Dashboard (4-Zone 2-Column Layout) ── */}
             {activeTab === 'dashboard' && dashboardData && (
               <ProgressDashboard 
                 data={dashboardData}
                 onNavigateToPatterns={() => setActiveTab('patterns')}
                 onNavigateToIntelligence={handleNavigateToIntelligence}
+                onNavigateToRecalls={() => setActiveTab('recalls')}
+                onNavigateToCommunity={() => setActiveTab('community')}
+                onNavigateToAlternatives={() => setActiveTab('alternatives')}
               />
             )}
 
@@ -93,7 +108,6 @@ export const App: React.FC = () => {
               <LearningLibraryView />
             )}
 
-            {/* ── Person B Tabs ── */}
             {activeTab === 'profile' && (
               <ProfilePage />
             )}
@@ -110,11 +124,12 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-6 mt-12 text-center text-xs text-slate-500">
-        <p>Nutri Lens — AI-Powered Food Label &amp; Ingredient Intelligence Platform</p>
-        <p className="mt-1 text-[11px] text-slate-600">Smart India Hackathon 2026 • Team CODESTRIX • Web App (Person A + Person B)</p>
+      <footer className="border-t border-slate-800/60 py-6 mt-12 text-center text-xs text-slate-400">
+        <p className="font-semibold">Nutri Lens — AI-Powered Food Label &amp; Ingredient Intelligence Platform</p>
+        <p className="mt-1 text-[11px] text-slate-500">Smart India Hackathon 2026 • Team CODESTRIX • Web App (4-Zone Task-Focused Layout)</p>
       </footer>
 
     </div>
   );
 };
+

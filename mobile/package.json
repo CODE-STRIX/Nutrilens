@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
+    "android": "run-android.bat",
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
@@ -11,13 +11,25 @@
   },
   "dependencies": {
     "react": "18.2.0",
-    "react-native": "0.72.6"
+    "react-native": "0.72.17"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
+    "@react-native-community/cli": "11.4.1",
+    "@react-native-community/cli-platform-android": "11.4.1",
+    "@react-native-community/cli-platform-ios": "11.4.1",
     "@types/react": "^18.2.6",
     "@types/react-native": "^0.72.2",
     "typescript": "^5.0.4"
+  },
+  "overrides": {
+    "@react-native-community/cli": "11.4.1",
+    "@react-native-community/cli-doctor": "11.4.1",
+    "@react-native-community/cli-hermes": "11.4.1",
+    "@react-native-community/cli-platform-android": "11.4.1",
+    "@react-native-community/cli-platform-ios": "11.4.1",
+    "ip": "^2.0.1",
+    "fast-xml-parser": "^5.0.0"
   }
 }

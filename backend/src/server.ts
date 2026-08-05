@@ -15,6 +15,7 @@ import userRoutes from './routes/userRoutes';
 import personalizationRoutes from './routes/personalizationRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import learningRoutes from './routes/learningRoutes';
+import mlRoutes from './routes/mlRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,6 +46,9 @@ app.use('/api/user', userRoutes);
 app.use('/api/personalize', personalizationRoutes);
 app.use('/api/dashboard', analyticsRoutes);
 app.use('/api/learning', learningRoutes);
+
+// ── ML Intelligence Models Routes ───────────────────────────────────────────
+app.use('/api/ml', mlRoutes);
 
 // ── Global Error Handler ────────────────────────────────────────────────────
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -80,7 +80,7 @@ export class ProductService {
   public getAdditiveById(idOrInsCode: string): Additive | undefined {
     const list = this.getAllAdditives();
     return list.find(a => 
-      a.id.toLowerCase() === idOrInsCode.toLowerCase() || 
+      (a.id && a.id.toLowerCase() === idOrInsCode.toLowerCase()) || 
       (a.insCode && a.insCode.toLowerCase() === idOrInsCode.toLowerCase())
     );
   }
@@ -103,7 +103,7 @@ export class ProductService {
       p.name.toLowerCase().includes(q) || 
       p.brand.toLowerCase().includes(q) || 
       p.category.toLowerCase().includes(q) ||
-      p.ingredientText.toLowerCase().includes(q)
+      (p.ingredientText && p.ingredientText.toLowerCase().includes(q))
     );
     return matches.map(p => this.enrichProductData(p));
   }
@@ -267,26 +267,27 @@ export class ProductService {
         id: `node-ing-${ing.id}`,
         label: ing.name,
         type: 'ingredient',
-        description: add ? add.whatItIs : `Key component in ${product.name}`,
+        description: add && add.whatItIs ? add.whatItIs : `Key component in ${product.name}`,
         connectedTo: [purposeNodeId]
       });
 
       // Purpose & Everyday Shared Foods Node
+      const commonFoods = add && add.commonFoodsFoundIn ? add.commonFoodsFoundIn : [];
       nodes.push({
         id: purposeNodeId,
-        label: add ? `${add.category}: ${add.whyAdded.slice(0, 35)}...` : (ing.purpose || "Food Ingredient"),
+        label: add ? `${add.category}: ${(add.whyAdded || add.description || '').slice(0, 35)}...` : (ing.purpose || "Food Ingredient"),
         type: 'purpose',
-        description: add ? `Also found in: ${add.commonFoodsFoundIn.join(', ')}` : "Common food building block",
-        connectedTo: add ? add.commonFoodsFoundIn.slice(0, 3).map((food, i) => `node-food-${ing.id}-${i}`) : []
+        description: commonFoods.length > 0 ? `Also found in: ${commonFoods.join(', ')}` : "Common food building block",
+        connectedTo: commonFoods.slice(0, 3).map((food, i) => `node-food-${ing.id}-${i}`)
       });
 
-      if (add) {
-        add.commonFoodsFoundIn.slice(0, 3).forEach((food, i) => {
+      if (commonFoods.length > 0) {
+        commonFoods.slice(0, 3).forEach((food, i) => {
           nodes.push({
             id: `node-food-${ing.id}-${i}`,
             label: food,
             type: 'food_category',
-            description: `Everyday food sharing ${add.name}`,
+            description: `Everyday food sharing ${add?.name || ing.name}`,
             connectedTo: []
           });
         });

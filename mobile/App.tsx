@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Product, UserProfile } from '../shared/types';
 
 // Person C Screens
@@ -57,7 +57,11 @@ export default function App() {
 
       {/* Secondary Quick Navigation Bar for Full SIH Demo Access */}
       <View style={styles.quickNavScroll}>
-        <ScrollViewHorizontal>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickNavContent}
+        >
           <TouchableOpacity
             style={[styles.quickNavChip, activeTab === 'scan' && styles.activeQuickNav]}
             onPress={() => setActiveTab('scan')}
@@ -113,7 +117,7 @@ export default function App() {
           >
             <Text style={[styles.quickNavText, activeTab === 'learning' && styles.activeQuickNavText]}>🎓 Learning (F10)</Text>
           </TouchableOpacity>
-        </ScrollViewHorizontal>
+        </ScrollView>
       </View>
 
       {/* Screen Container */}
@@ -184,12 +188,6 @@ export default function App() {
     </SafeAreaView>
   );
 }
-
-// Simple horizontal scroll helper for quick SIH feature switching
-const ScrollViewHorizontal: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <View style={{ flexDirection: 'row', gap: 6 }}>{children}</View>
-);
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -234,11 +232,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   quickNavScroll: {
-    paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: '#F8FAFC',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
+  },
+  quickNavContent: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 12,
   },
   quickNavChip: {
     backgroundColor: '#FFFFFF',

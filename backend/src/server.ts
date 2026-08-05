@@ -28,10 +28,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    service: 'Nutri Lens API Backend (Person E & Person F Services)',
+    service: 'NutriLens API Backend',
     version: '1.0.0',
-    team: 'CODESTRIX',
-    event: 'Smart India Hackathon 2026',
     timestamp: new Date().toISOString()
   });
 });

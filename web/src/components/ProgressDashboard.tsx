@@ -66,19 +66,19 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
     <div className="space-y-8 animate-fadeIn">
       
       {/* ── HERO / QUICK SCAN ACTION AREA ── */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl relative overflow-hidden border border-emerald-500/30 shadow-xl bg-gradient-to-br from-emerald-500/10 via-slate-900/50 to-sky-500/10">
+      <div className="glass-card p-6 sm:p-8 rounded-3xl relative overflow-hidden border border-emerald-500/30 shadow-md">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
           
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 text-xs font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 rounded-full">
               <Sparkles className="w-3.5 h-3.5" />
-              Quick Ingredient &amp; Barcode Lookup
+              Ingredient &amp; Barcode Lookup
             </div>
             <h1 className="font-heading text-2xl sm:text-3xl font-extrabold tracking-tight">
               Scan or Look Up Any Food Label
             </h1>
             <p className="text-sm text-slate-400">
-              Instantly translate complex INS codes, additives, and nutrition facts into plain-language health intelligence tailored to your profile.
+              Instantly translate complex INS codes, additives, and nutrition facts into plain-language health guidance tailored to your profile.
             </p>
           </div>
 
@@ -91,7 +91,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                 value={scanInput}
                 onChange={(e) => setScanInput(e.target.value)}
                 placeholder="Enter barcode, product name, or INS code (e.g. INS 211)..."
-                className="w-full pl-11 pr-12 py-3 text-xs sm:text-sm rounded-2xl bg-slate-900/90 border border-slate-700/80 focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
+                className="w-full pl-11 pr-12 py-3 text-xs sm:text-sm rounded-2xl bg-slate-900/90 border border-slate-700/80 focus:outline-none focus:border-emerald-500 transition-colors"
               />
               <button
                 type="button"
@@ -106,7 +106,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
             <div className="flex items-center gap-3">
               <button
                 type="submit"
-                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs btn-primary-emerald flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 cursor-pointer shadow-md transition-colors"
               >
                 <Sparkles className="w-4 h-4" />
                 Analyze Product
@@ -115,10 +115,10 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateToAlternatives ? onNavigateToAlternatives() : onNavigateToPatterns()}
-                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs btn-secondary-blue flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                className="flex-1 py-3 px-4 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <ArrowLeftRight className="w-4 h-4" />
-                Compare Two Products
+                Compare Products
               </button>
             </div>
           </form>

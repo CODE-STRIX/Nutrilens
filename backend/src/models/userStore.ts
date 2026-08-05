@@ -7,7 +7,7 @@ export interface UserRecord extends UserProfile {
 
 const users: Map<string, UserRecord> = new Map();
 
-// Seed a default test user for SIH demo: Rahul Sharma with Hypertension & Peanut Allergy
+// Seed a default test user: Rahul Sharma with Hypertension & Peanut Allergy
 const seedDemoUsers = () => {
   const demoUserId = 'usr-demo-rahul';
   const hashedPassword = bcrypt.hashSync('Password123!', 8);

@@ -55,7 +55,7 @@ export default function App() {
         </View>
       </View>
 
-      {/* Secondary Quick Navigation Bar for Full SIH Demo Access */}
+      {/* Quick Navigation Bar */}
       <View style={styles.quickNavScroll}>
         <ScrollViewHorizontal>
           <TouchableOpacity
@@ -185,7 +185,7 @@ export default function App() {
   );
 }
 
-// Simple horizontal scroll helper for quick SIH feature switching
+// Simple horizontal scroll helper for quick feature switching
 const ScrollViewHorizontal: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <View style={{ flexDirection: 'row', gap: 6 }}>{children}</View>
 );

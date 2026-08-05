@@ -37,24 +37,23 @@ export const AlternativesComparisonPage: React.FC = () => {
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
       {/* Header Banner */}
-      <div className="glass-panel" style={{ padding: '30px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(16,185,129,0.08))' }}>
+      <div className="glass-panel" style={{ padding: '30px', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <span className="badge badge-indigo"><ArrowLeftRight size={14} /> Features 8 & 9: Better Decision Making</span>
-            <span className="badge badge-emerald">Person B Scope</span>
+            <span className="badge badge-emerald"><ArrowLeftRight size={14} /> Alternatives & Comparisons</span>
           </div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '6px' }}>Healthy Alternatives & Shopping Assistant History</h1>
+          <h1 style={{ fontSize: '2rem', marginBottom: '6px' }}>Healthy Alternatives & Product Comparison</h1>
           <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', fontSize: '0.95rem' }}>
-            Review at-shelf healthy alternatives and side-by-side product comparisons — each ending in a plain-language verdict.
+            Review healthy alternatives and side-by-side product comparisons with clear, plain-language verdicts.
           </p>
         </div>
       </div>
 
-      {/* Feature 8: Alternative Recommendation */}
+      {/* Alternative Recommendation */}
       <div className="glass-panel" style={{ padding: '28px', marginBottom: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
           <Sparkles color="var(--emerald-400)" size={22} />
-          <h2 style={{ fontSize: '1.35rem' }}>Feature 8 — Healthy Alternative Recommendation</h2>
+          <h2 style={{ fontSize: '1.35rem' }}>Healthy Alternative Recommendation</h2>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '20px', alignItems: 'center' }}>

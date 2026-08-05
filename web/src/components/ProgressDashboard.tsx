@@ -401,11 +401,11 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
                       <td className="py-3.5 px-3 text-slate-400">{scan.brand}</td>
                       <td className="py-3.5 px-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          scan.sodiumPerServingMg > 400 
+                          (scan.sodiumMg ?? (scan as any).sodiumPerServingMg ?? 0) > 400 
                             ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30' 
                             : 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
                         }`}>
-                          {scan.sodiumPerServingMg} mg
+                          {scan.sodiumMg ?? (scan as any).sodiumPerServingMg ?? 0} mg
                         </span>
                       </td>
                       <td className="py-3.5 px-3 text-right font-black text-sm">

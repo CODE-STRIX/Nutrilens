@@ -61,20 +61,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo & Quick Search */}
           <div className="flex items-center gap-4 shrink-0">
             <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setActiveTab('dashboard')}>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 p-0.5 shadow-md">
-                <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-emerald-400 animate-pulse-subtle" />
-                </div>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-sm">
+                <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-heading font-extrabold text-xl tracking-tight">
-                    Nutri<span className="text-emerald-500">Lens</span>
-                  </span>
-                  <span className="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full">
-                    SIH 2026
-                  </span>
-                </div>
+                <span className="font-heading font-extrabold text-xl tracking-tight">
+                  Nutri<span className="text-emerald-500">Lens</span>
+                </span>
               </div>
             </div>
 
@@ -91,13 +84,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             </form>
           </div>
 
-          {/* Center Navigation Tabs */}
+          {/* Center Navigation Tabs - Clean Unified Emerald Scheme */}
           <nav className="hidden md:flex items-center gap-1 p-1 rounded-xl bg-slate-800/30 border border-slate-700/40">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'dashboard'
-                  ? 'bg-emerald-500 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'
               }`}
             >
@@ -109,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('intelligence')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'intelligence'
-                  ? 'bg-emerald-500 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'
               }`}
             >
@@ -121,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('patterns')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'patterns'
-                  ? 'bg-emerald-500 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'
               }`}
             >
@@ -133,14 +126,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('recalls')}
               className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'recalls'
-                  ? 'bg-rose-500 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'
               }`}
             >
               <ShieldAlert className="w-3.5 h-3.5" />
               Alerts
               {recallCount > 0 && (
-                <span className="ml-0.5 px-1.5 py-0.5 text-[9px] font-bold bg-rose-600 text-white rounded-full animate-bounce">
+                <span className="ml-0.5 px-1.5 py-0.5 text-[9px] font-bold bg-rose-500 text-white rounded-full">
                   {recallCount}
                 </span>
               )}
@@ -150,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('community')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'community'
-                  ? 'bg-amber-500 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'
               }`}
             >
@@ -162,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('alternatives')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'alternatives'
-                  ? 'bg-sky-500 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'
               }`}
             >
@@ -174,7 +167,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('learning')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'learning'
-                  ? 'bg-cyan-500 text-white shadow-sm'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700/30'
               }`}
             >
@@ -189,10 +182,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Active Health Profile Pill */}
             <div 
               onClick={() => setActiveTab('profile')} 
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 cursor-pointer hover:bg-sky-500/20 transition-all text-xs font-medium"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-pointer hover:bg-emerald-500/20 transition-all text-xs font-medium"
               title="Click to manage health profile"
             >
-              <Stethoscope className="w-3.5 h-3.5 text-sky-400" />
+              <Stethoscope className="w-3.5 h-3.5 text-emerald-400" />
               <span className="truncate max-w-[150px]">Hypertension Active</span>
             </div>
 
@@ -203,9 +196,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
             >
               {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400" />
+                <Sun className="w-4 h-4 text-emerald-400" />
               ) : (
-                <Moon className="w-4 h-4 text-indigo-500" />
+                <Moon className="w-4 h-4 text-emerald-500" />
               )}
             </button>
 
@@ -214,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab('profile')}
               className="flex items-center gap-2 p-1 pl-1.5 rounded-xl border border-slate-700/40 bg-slate-800/30 cursor-pointer hover:border-emerald-500/40 transition-all"
             >
-              <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+              <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
                 RS
               </div>
             </div>
@@ -226,14 +219,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Sub-Nav */}
       <div className="md:hidden flex overflow-x-auto px-4 py-2 border-t border-slate-800/60 gap-2 scrollbar-none">
-        <button onClick={() => setActiveTab('dashboard')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-emerald-500 text-white' : 'text-slate-400'}`}>Dashboard</button>
-        <button onClick={() => setActiveTab('intelligence')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'intelligence' ? 'bg-emerald-500 text-white' : 'text-slate-400'}`}>Explorer</button>
-        <button onClick={() => setActiveTab('patterns')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'patterns' ? 'bg-emerald-500 text-white' : 'text-slate-400'}`}>Patterns</button>
-        <button onClick={() => setActiveTab('recalls')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'recalls' ? 'bg-rose-500 text-white' : 'text-slate-400'}`}>Alerts ({recallCount})</button>
-        <button onClick={() => setActiveTab('community')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'community' ? 'bg-amber-500 text-white' : 'text-slate-400'}`}>Community</button>
-        <button onClick={() => setActiveTab('alternatives')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'alternatives' ? 'bg-sky-500 text-white' : 'text-slate-400'}`}>Alternatives</button>
-        <button onClick={() => setActiveTab('learning')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'learning' ? 'bg-cyan-500 text-white' : 'text-slate-400'}`}>Learning</button>
-        <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'profile' ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}>Profile</button>
+        <button onClick={() => setActiveTab('dashboard')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'dashboard' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Dashboard</button>
+        <button onClick={() => setActiveTab('intelligence')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'intelligence' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Explorer</button>
+        <button onClick={() => setActiveTab('patterns')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'patterns' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Patterns</button>
+        <button onClick={() => setActiveTab('recalls')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'recalls' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Alerts ({recallCount})</button>
+        <button onClick={() => setActiveTab('community')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'community' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Community</button>
+        <button onClick={() => setActiveTab('alternatives')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'alternatives' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Alternatives</button>
+        <button onClick={() => setActiveTab('learning')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'learning' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Learning</button>
+        <button onClick={() => setActiveTab('profile')} className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap ${activeTab === 'profile' ? 'bg-emerald-600 text-white' : 'text-slate-400'}`}>Profile</button>
       </div>
     </header>
   );

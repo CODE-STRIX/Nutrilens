@@ -44,16 +44,15 @@ export const LearningLibraryPage: React.FC = () => {
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
       {/* Header Banner */}
-      <div className="glass-panel" style={{ padding: '30px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.1))' }}>
+      <div className="glass-panel" style={{ padding: '30px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span className="badge badge-indigo"><BookOpen size={14} /> Feature 10: Learning Mode Library</span>
-              <span className="badge badge-emerald">Person B Scope</span>
+              <span className="badge badge-emerald"><BookOpen size={14} /> Learning Library</span>
             </div>
             <h1 style={{ fontSize: '2rem', marginBottom: '6px' }}>Food Literacy & Nutrition Knowledge Base</h1>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', fontSize: '0.95rem' }}>
-              Every label scan teaches one nutrition concept. Browse the full library of food science lessons and additive guides — building real food literacy one scan at a time.
+              Every label scan teaches one nutrition concept. Browse the full library of food science lessons and additive guides.
             </p>
           </div>
 

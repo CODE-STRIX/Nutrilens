@@ -55,7 +55,7 @@ export default function App() {
         </View>
       </View>
 
-      {/* Secondary Quick Navigation Bar for Full SIH Demo Access */}
+      {/* Quick Navigation Bar */}
       <View style={styles.quickNavScroll}>
         <ScrollView
           horizontal
@@ -188,6 +188,7 @@ export default function App() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

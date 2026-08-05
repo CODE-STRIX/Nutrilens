@@ -1,13 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { PatternIntelligenceWidget } from '../components/PatternIntelligenceWidget';
 import { ProgressDashboardCard } from '../components/ProgressDashboardCard';
 import { PatternIntelligenceEngine } from '../services/patternService';
+import { MlService, MlPatternResult } from '../services/mlService';
 import { MOCK_SCAN_HISTORY } from '../services/mockData';
 
 export const DashboardScreen: React.FC = () => {
   const progressData = PatternIntelligenceEngine.calculateProgress(MOCK_SCAN_HISTORY);
   const patternInsights = PatternIntelligenceEngine.analyzePatterns(MOCK_SCAN_HISTORY);
+
+  // Model 5: ML-powered pattern anomaly analysis (enriches local insights with ML backend)
+  const [mlPatterns, setMlPatterns] = useState<MlPatternResult | null>(null);
+
+  useEffect(() => {
+    // Convert MOCK_SCAN_HISTORY format to ML service format
+    const scanRecords = MOCK_SCAN_HISTORY.map(h => ({
+      id: h.id,
+      userId: 'user_local',
+      productName: h.productName,
+      scannedAt: h.timestamp,
+      sodiumMg: h.sodiumMg,
+      sugarGrams: h.sugarsG ?? 5,
+      saturatedFatGrams: 2,
+      fiberGrams: 2,
+      hasAdditives: h.processingLevel === 'ultra_processed',
+    }));
+
+    MlService.analyzeEatingPatterns('user_local', scanRecords)
+      .then(result => setMlPatterns(result))
+      .catch(() => { /* use local insights */ });
+  }, []);
+
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

@@ -71,6 +71,10 @@ export const App: React.FC = () => {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
     const initAppData = async () => {
       try {
         const [dash, patterns, recs] = await Promise.all([
@@ -92,6 +96,10 @@ export const App: React.FC = () => {
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const handleToggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   const handleNavigateToIntelligence = (productId?: string) => {
@@ -140,6 +148,7 @@ export const App: React.FC = () => {
         onOpenScanner={() => setShowGlobalScanner(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onSearchProduct={handleNavigateToIntelligence}
       />
 
       {/* Main Content Viewport */}
@@ -157,6 +166,9 @@ export const App: React.FC = () => {
                 onNavigateToPatterns={() => setActiveTab('patterns')}
                 onNavigateToIntelligence={handleNavigateToIntelligence}
                 activeProfile={activeProfile}
+                onNavigateToRecalls={() => setActiveTab('recalls')}
+                onNavigateToCommunity={() => setActiveTab('community')}
+                onNavigateToAlternatives={() => setActiveTab('alternatives')}
               />
             )}
 
@@ -256,12 +268,10 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950 py-6 mt-12 text-center text-xs text-slate-500">
-        <p>Nutri Lens — AI-Powered Food Label &amp; Ingredient Intelligence Platform</p>
+        <p className="font-semibold">Nutri Lens — AI-Powered Food Label &amp; Ingredient Intelligence Platform</p>
         <p className="mt-1 text-[11px] text-slate-600">Team CODESTRIX • Web Application</p>
       </footer>
 
     </div>
   );
 };
-
-

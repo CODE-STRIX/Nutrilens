@@ -46,9 +46,9 @@ export const RecallAlertsView: React.FC = () => {
     if (!searchBarcode) return;
 
     const matched = alerts.find(a => 
-      a.barcode.includes(searchBarcode) || 
-      a.productName.toLowerCase().includes(searchBarcode.toLowerCase()) ||
-      a.affectedBatches.some(b => b.toLowerCase().includes(searchBarcode.toLowerCase()))
+      (a.barcode && a.barcode.includes(searchBarcode)) || 
+      (a.productName && a.productName.toLowerCase().includes(searchBarcode.toLowerCase())) ||
+      (a.affectedBatches && a.affectedBatches.some(b => b.toLowerCase().includes(searchBarcode.toLowerCase())))
     );
 
     if (matched) {

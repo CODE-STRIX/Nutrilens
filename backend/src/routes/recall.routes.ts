@@ -3,6 +3,7 @@ import { recallController } from '../controllers/recall.controller';
 
 const router = Router();
 
+router.get('/', recallController.getAllNotices);
 router.get('/notices', recallController.getAllNotices);
 router.get('/alerts', recallController.getUserAlerts);
 router.post('/check', recallController.triggerRecallCheck);

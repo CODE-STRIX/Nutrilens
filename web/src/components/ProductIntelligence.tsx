@@ -19,7 +19,9 @@ import {
   Layers, 
   HeartPulse, 
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Barcode,
+  X
 } from 'lucide-react';
 
 interface ProductIntelligenceProps {
@@ -35,6 +37,12 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initia
   const [selectedMapNode, setSelectedMapNode] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'CARDS' | 'MAP' | 'TRANSPARENCY'>('CARDS');
   const [loading, setLoading] = useState(true);
+
+  // Barcode lookup state
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
+  const [barcodeError, setBarcodeError] = useState<string | null>(null);
+  const [barcodeSource, setBarcodeSource] = useState<'local_db' | 'open_food_facts' | null>(null);
 
   useEffect(() => {
     const loadCatalog = async () => {
@@ -58,7 +66,33 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initia
 
   const handleSelectProduct = async (product: Product) => {
     setSelectedProduct(product);
+    setBarcodeError(null);
+    setBarcodeSource(null);
     setLoading(true);
+    const res = await WebApiService.analyzeProduct(product.id);
+    setAnalysis(res);
+    setLoading(false);
+  };
+
+  const handleBarcodeSearch = async () => {
+    const code = barcodeInput.trim();
+    if (!code) return;
+    setBarcodeLoading(true);
+    setBarcodeError(null);
+    setBarcodeSource(null);
+    const { product, source } = await WebApiService.getProductByBarcode(code);
+    if (!product) {
+      setBarcodeError(`No product found for barcode "${code}". It may not be in Open Food Facts yet.`);
+      setBarcodeLoading(false);
+      return;
+    }
+    // Add to local catalog list if not already present
+    setProducts(prev => prev.some(p => p.id === product.id) ? prev : [product, ...prev]);
+    setBarcodeSource(source as 'local_db' | 'open_food_facts');
+    setBarcodeLoading(false);
+    // Load analysis
+    setLoading(true);
+    setSelectedProduct(product);
     const res = await WebApiService.analyzeProduct(product.id);
     setAnalysis(res);
     setLoading(false);
@@ -124,8 +158,94 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initia
           </div>
         </div>
 
+        {/* ── Barcode Lookup Panel ─────────────────────────────── */}
+        <div className="pt-4 border-t border-slate-800/80 space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
+            <Barcode className="w-4 h-4 text-emerald-400" />
+            Scan by Barcode
+            <span className="text-slate-500 font-normal">— enter any real product barcode number</span>
+          </div>
+
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Barcode className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                id="barcode-input"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="e.g. 3017620422003 (Nutella), 8901491101820 (Lay's), 5449000000996 (Coca-Cola)..."
+                value={barcodeInput}
+                onChange={e => { setBarcodeInput(e.target.value); setBarcodeError(null); }}
+                onKeyDown={e => e.key === 'Enter' && handleBarcodeSearch()}
+                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all font-mono tracking-wider"
+              />
+              {barcodeInput && (
+                <button
+                  onClick={() => { setBarcodeInput(''); setBarcodeError(null); setBarcodeSource(null); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <button
+              id="barcode-search-btn"
+              onClick={handleBarcodeSearch}
+              disabled={barcodeLoading || !barcodeInput.trim()}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 shrink-0"
+            >
+              {barcodeLoading
+                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                : <Search className="w-3.5 h-3.5" />
+              }
+              {barcodeLoading ? 'Looking up...' : 'Look Up'}
+            </button>
+          </div>
+
+          {/* Error state */}
+          {barcodeError && (
+            <div className="flex flex-col gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>{barcodeError}</span>
+              </div>
+              <div className="text-[10px] text-rose-500/80 pl-5 space-y-0.5">
+                <p>⚠️ Many Indian brands (Britannia, Haldirams, MDH, etc.) are not yet in Open Food Facts.</p>
+                <p>
+                  Try global products like Nutella (<span className="font-mono">3017620422003</span>), Coca-Cola (<span className="font-mono">5449000000996</span>), or Lay's (<span className="font-mono">8901491101820</span>).
+                </p>
+                <a
+                  href={`https://world.openfoodfacts.org/product/${barcodeInput.trim()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 underline underline-offset-2"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Search this barcode on Open Food Facts website
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Success source badge */}
+          {barcodeSource && selectedProduct && (
+            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+              barcodeSource === 'open_food_facts'
+                ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            }`}>
+              <CheckCircle2 className="w-3 h-3" />
+              {barcodeSource === 'open_food_facts'
+                ? `Found on Open Food Facts — "${selectedProduct.name}"`
+                : `Found in local database — "${selectedProduct.name}"`
+              }
+            </div>
+          )}
+        </div>
+
         {/* Product Selector Quick Pills */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80">
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800/60">
           <span className="text-xs font-medium text-slate-400 mr-2">Sample Catalog:</span>
           {products.map(p => (
             <button

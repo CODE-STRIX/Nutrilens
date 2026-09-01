@@ -27,6 +27,28 @@ const defaultAlternative: AlternativeRecommendation = {
 };
 
 const defaultComparison: ComparisonResult = {
+  productA: {
+    id: 'prod-maggi-2min',
+    name: 'Maggi 2-Minute Masala Noodles',
+    brand: 'Nestlé',
+    category: 'Instant Noodles',
+    ingredientText: 'Refined Wheat Flour, Palm Oil, Salt, MSG (INS 621), Tartrazine (INS 102)',
+    ingredients: [],
+    additives: [],
+    manufacturingRationale: [],
+    createdAt: new Date().toISOString()
+  },
+  productB: {
+    id: 'prod-muesli-whole-grain',
+    name: 'Whole Grain Millet Muesli',
+    brand: 'TrueElements',
+    category: 'Breakfast Cereals',
+    ingredientText: 'Whole Grain Rolled Oats, Bajra Flakes, Jowar Flakes, Pumpkin Seeds, Raw Honey.',
+    ingredients: [],
+    additives: [],
+    manufacturingRationale: [],
+    createdAt: new Date().toISOString()
+  },
   productAPersonalizedScore: 17,
   productBPersonalizedScore: 88,
   winningProduct: 'B',
@@ -86,6 +108,7 @@ export const AlternativesComparisonPage: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fadeIn pb-12">
+      {/* Header Banner */}
       {/* Header Banner */}
       <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-cyan-500/30 bg-cyan-950/10 relative overflow-hidden">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-72 h-72 bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 rounded-full blur-3xl pointer-events-none" />

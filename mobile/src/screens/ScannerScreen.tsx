@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Product } from '../../../shared/types';
 import { ScannerService } from '../services/scannerService';
+import { MlService, MlOcrResult } from '../services/mlService';
 
 interface Props {
   onSelectProduct: (product: Product) => void;
@@ -13,6 +14,8 @@ export const ScannerScreen: React.FC<Props> = ({ onSelectProduct, onOpenCommunit
   const [manualBarcode, setManualBarcode] = useState('');
   const [rawOcrText, setRawOcrText] = useState('');
   const [scanMessage, setScanMessage] = useState<string | null>(null);
+  const [mlLoading, setMlLoading] = useState(false);
+  const [mlOcrResult, setMlOcrResult] = useState<MlOcrResult | null>(null);
 
   const handleBarcodeScan = (code: string) => {
     const product = ScannerService.scanBarcode(code);
@@ -20,19 +23,30 @@ export const ScannerScreen: React.FC<Props> = ({ onSelectProduct, onOpenCommunit
       setScanMessage(`✓ Found product: ${product.name}`);
       onSelectProduct(product);
     } else {
-      setScanMessage(`⚠️ No barcode match found for "${code}".`);
+      setScanMessage(`⚠️ No barcode match found for "${code}". Try OCR Label Scan.`);
     }
   };
 
-  const handleOcrProcess = () => {
+  // Model 1+2: ML-powered OCR parse → entity normalization
+  const handleOcrProcess = async () => {
     if (!rawOcrText.trim()) return;
-    const result = ScannerService.processOcrText(rawOcrText);
 
+    // First try ML NLP entity parse for richer INS additive detection
+    setMlLoading(true);
+    try {
+      const mlResult = await MlService.parseOcrLabelText(rawOcrText);
+      setMlOcrResult(mlResult);
+    } finally {
+      setMlLoading(false);
+    }
+
+    // Also attempt barcode DB match
+    const result = ScannerService.processOcrText(rawOcrText);
     if (result.matchedProduct) {
       setScanMessage(`✓ Matched via Label OCR: ${result.matchedProduct.name}`);
       onSelectProduct(result.matchedProduct);
     } else {
-      setScanMessage(`⚠️ Unlisted regional product detected (${result.extractedIngredients.length} ingredients).`);
+      setScanMessage(`⚠️ Unlisted regional product — ${rawOcrText.split(',').length} ingredients extracted by ML. Submit to community?`);
       onOpenCommunitySubmission(rawOcrText);
     }
   };

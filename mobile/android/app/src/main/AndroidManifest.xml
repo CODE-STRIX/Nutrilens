@@ -5,6 +5,7 @@
     <application
       android:name=".MainApplication"
       android:label="Nutri Lens"
+      android:theme="@style/AppTheme"
       android:allowBackup="false">
       <activity
         android:name=".MainActivity"

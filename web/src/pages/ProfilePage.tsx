@@ -130,8 +130,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onProfileUpdated, acti
               Personalized Health <span className="text-indigo-400 font-black">Guidance Engine</span>
             </h1>
             <p className="text-slate-300 text-sm max-w-2xl font-medium leading-relaxed">
-              Configure medical conditions, food allergies, and dietary goals. Nutri Lens uses these settings to re-evaluate every food barcode scan into tailored safety intelligence.
->>>>>>> 28594d5 (feat: UI enhancements, instant tab loading, theme fixes & spacious layouts)
+              Configure medical conditions, food allergies, and dietary goals. NutriLens uses these settings to re-evaluate every food barcode scan into tailored safety intelligence.
             </p>
           </div>
 

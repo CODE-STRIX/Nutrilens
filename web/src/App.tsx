@@ -43,7 +43,6 @@ const defaultPatternReport: PatternIntelligenceReport = {
 };
 
 export const App: React.FC = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [activeTab, setActiveTab] = useState<AppTab>('dashboard');
   const [targetProductId, setTargetProductId] = useState<string | undefined>(undefined);
   const [dashboardData, setDashboardData] = useState<ProgressDashboardData>(defaultDashboard);
@@ -70,10 +69,6 @@ export const App: React.FC = () => {
   const [showGlobalScanner, setShowGlobalScanner] = useState(false);
   const [scanStep, setScanStep] = useState<'CAMERA' | 'ANALYZING' | 'DONE'>('CAMERA');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
 
   useEffect(() => {
     const initAppData = async () => {

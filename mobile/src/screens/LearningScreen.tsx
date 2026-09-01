@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LearningCard } from '../components/LearningCard';
+import { NutriIcon } from '../components/NutriIcon';
 import { MobileLearningLesson } from '../../../shared/types';
 import { MOCK_LEARNING_LESSONS } from '../services/mockData';
 
@@ -34,7 +35,10 @@ export const LearningScreen: React.FC = () => {
       {/* Progress Card */}
       <View style={styles.progressCard}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>🎓 Food Literacy Mastery</Text>
+          <View style={styles.progressTitleRow}>
+            <NutriIcon name="book" size={16} color="#FFFFFF" />
+            <Text style={styles.progressTitle}> Food Literacy Mastery</Text>
+          </View>
           <Text style={styles.progressRatio}>
             {completedCount} / {lessons.length} Learned
           </Text>
@@ -108,6 +112,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  progressTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   progressTitle: {
     fontSize: 15,

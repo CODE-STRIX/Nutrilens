@@ -1,7 +1,8 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ALLERGIES_META, HEALTH_CONDITIONS_META, HEALTH_GOALS_META } from '../../../shared/constants';
 import { Allergy, HealthCondition, HealthGoal, UserProfile } from '../../../shared/types';
+import { NutriIcon } from '../components/NutriIcon';
 
 interface Props {
   userProfile: UserProfile;
@@ -9,6 +10,13 @@ interface Props {
 }
 
 export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile }) => {
+  const [saveToast, setSaveToast] = useState(false);
+
+  const triggerSaveToast = () => {
+    setSaveToast(true);
+    setTimeout(() => setSaveToast(false), 2000);
+  };
+
   const toggleCondition = (cond: HealthCondition) => {
     const exists = userProfile.conditions.includes(cond);
     const updated = exists
@@ -16,6 +24,7 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
       : [...userProfile.conditions, cond];
 
     onUpdateProfile({ ...userProfile, conditions: updated });
+    triggerSaveToast();
   };
 
   const toggleAllergy = (allg: Allergy) => {
@@ -25,6 +34,7 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
       : [...userProfile.allergies, allg];
 
     onUpdateProfile({ ...userProfile, allergies: updated });
+    triggerSaveToast();
   };
 
   const toggleGoal = (gl: HealthGoal) => {
@@ -34,27 +44,51 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
       : [...userProfile.goals, gl];
 
     onUpdateProfile({ ...userProfile, goals: updated });
+    triggerSaveToast();
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>User Health Profile</Text>
         <Text style={styles.subtitle}>
-          Configure your conditions, allergies & dietary targets to power personalized analysis
+          Configure your conditions, allergies & dietary goals to power personalized health analysis across all screens
         </Text>
       </View>
 
+      {/* Save Notification Toast */}
+      {saveToast && (
+        <View style={styles.toast}>
+          <Text style={styles.toastText}>✓ Profile preferences updated live!</Text>
+        </View>
+      )}
+
       {/* User Basic Info */}
       <View style={styles.infoCard}>
-        <Text style={styles.userName}>{userProfile.name}</Text>
-        <Text style={styles.userDetails}>Age: {userProfile.age} • Gender: {userProfile.gender.toUpperCase()}</Text>
+        <View style={styles.avatarLarge}>
+          <Text style={styles.avatarText}>{userProfile.name[0]}</Text>
+        </View>
+        <View style={styles.userMeta}>
+          <Text style={styles.userName}>{userProfile.name}</Text>
+          <Text style={styles.userDetails}>
+            Age: {userProfile.age} • Gender: {(userProfile.gender || 'Other').toUpperCase()} • Active Conditions: {userProfile.conditions.length}
+          </Text>
+        </View>
       </View>
 
       {/* Health Conditions Section */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>🏥 Health Conditions</Text>
-        <Text style={styles.sectionSub}>Select active conditions to trigger personalized warning flags:</Text>
+        <View style={styles.sectionTitleRow}>
+          <NutriIcon name="health" size={16} color="#0F172A" />
+          <Text style={styles.sectionTitle}> Health Conditions</Text>
+        </View>
+        <Text style={styles.sectionSub}>
+          Select active health conditions to trigger personalized warning flags:
+        </Text>
 
         <View style={styles.grid}>
           {(Object.keys(HEALTH_CONDITIONS_META) as HealthCondition[]).map((condKey) => {
@@ -66,7 +100,7 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
                 key={condKey}
                 style={[styles.tile, isSelected && styles.tileActive]}
                 onPress={() => toggleCondition(condKey)}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
               >
                 <Text style={[styles.tileTitle, isSelected && styles.tileTitleActive]}>
                   {isSelected ? '✓ ' : '+ '}{meta.label}
@@ -82,8 +116,13 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
 
       {/* Allergies Section */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>🚨 Food Allergies</Text>
-        <Text style={styles.sectionSub}>Select ingredients to trigger automatic allergen alerts:</Text>
+        <View style={styles.sectionTitleRow}>
+          <NutriIcon name="allergy" size={16} color="#EF4444" />
+          <Text style={styles.sectionTitle}> Food Allergies</Text>
+        </View>
+        <Text style={styles.sectionSub}>
+          Select ingredients to trigger automatic allergen alerts:
+        </Text>
 
         <View style={styles.chipGrid}>
           {(Object.keys(ALLERGIES_META) as Allergy[]).map((algKey) => {
@@ -95,10 +134,10 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
                 key={algKey}
                 style={[styles.chip, isSelected && styles.chipActive]}
                 onPress={() => toggleAllergy(algKey)}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
               >
                 <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
-                  {isSelected ? '🚨 ' : ''}{meta.label}
+                  {isSelected ? '✓ ' : '+ '}{meta.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -106,12 +145,15 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
         </View>
       </View>
 
-      {/* Goals Section */}
+      {/* Health Goals Section */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>🎯 Health Goals</Text>
-        <Text style={styles.sectionSub}>Set targets for food ranking and suitability framing:</Text>
+        <View style={styles.sectionTitleRow}>
+          <NutriIcon name="target" size={16} color="#0D9488" />
+          <Text style={styles.sectionTitle}> Health & Nutrition Goals</Text>
+        </View>
+        <Text style={styles.sectionSub}>Set dietary targets for smart shopping assistant:</Text>
 
-        <View style={styles.grid}>
+        <View style={styles.chipGrid}>
           {(Object.keys(HEALTH_GOALS_META) as HealthGoal[]).map((goalKey) => {
             const isSelected = userProfile.goals.includes(goalKey);
             const meta = HEALTH_GOALS_META[goalKey];
@@ -119,15 +161,12 @@ export const ProfileScreen: React.FC<Props> = ({ userProfile, onUpdateProfile })
             return (
               <TouchableOpacity
                 key={goalKey}
-                style={[styles.tile, isSelected && styles.tileActiveGoal]}
+                style={[styles.chip, isSelected && styles.goalChipActive]}
                 onPress={() => toggleGoal(goalKey)}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
               >
-                <Text style={[styles.tileTitle, isSelected && styles.tileTitleActive]}>
-                  {isSelected ? '🎯 ' : ''}{meta.label}
-                </Text>
-                <Text style={[styles.tileDesc, isSelected && styles.tileDescActive]}>
-                  {meta.description}
+                <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>
+                  {isSelected ? '✓ ' : '+ '}{meta.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -148,51 +187,95 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
   title: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#0F172A',
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 13,
     color: '#64748B',
     marginTop: 2,
+    lineHeight: 18,
+  },
+  toast: {
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#16A34A',
+    borderRadius: 12,
+    padding: 10,
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  toastText: {
+    color: '#15803D',
+    fontSize: 12,
+    fontWeight: '800',
   },
   infoCard: {
-    backgroundColor: '#0F172A',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    elevation: 2,
+  },
+  avatarLarge: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#4F46E5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  userMeta: {
+    flex: 1,
+    marginLeft: 14,
   },
   userName: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#0F172A',
   },
   userDetails: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 4,
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 14,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    elevation: 2,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#0F172A',
-    marginBottom: 2,
   },
   sectionSub: {
     fontSize: 12,
     color: '#64748B',
+    marginTop: 2,
     marginBottom: 12,
   },
   grid: {
@@ -206,28 +289,25 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   tileActive: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#EF4444',
-  },
-  tileActiveGoal: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#10B981',
+    backgroundColor: '#CCFBF1',
+    borderColor: '#0D9488',
   },
   tileTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#334155',
   },
   tileTitleActive: {
-    color: '#0F172A',
+    color: '#0F766E',
+    fontWeight: '900',
   },
   tileDesc: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#64748B',
     marginTop: 2,
   },
   tileDescActive: {
-    color: '#334155',
+    color: '#0D9488',
   },
   chipGrid: {
     flexDirection: 'row',
@@ -235,20 +315,28 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   chipActive: {
-    backgroundColor: '#DC2626',
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
+  },
+  goalChipActive: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#4F46E5',
   },
   chipText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#334155',
   },
   chipTextActive: {
-    color: '#FFFFFF',
+    color: '#1E293B',
+    fontWeight: '800',
   },
 });

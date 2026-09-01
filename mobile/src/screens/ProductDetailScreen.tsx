@@ -3,8 +3,10 @@ import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Product } from '../../../shared/types';
 import { IngredientInteractionMap } from '../components/IngredientInteractionMap';
 import { InteractiveIngredientCard } from '../components/InteractiveIngredientCard';
+import { NutriIcon } from '../components/NutriIcon';
 import { RecallAlertBanner } from '../components/RecallAlertBanner';
 import { RecallService } from '../services/recallService';
+import { theme } from '../theme/colors';
 
 interface Props {
   product: Product;
@@ -23,7 +25,11 @@ export const ProductDetailScreen: React.FC<Props> = ({ product }) => {
   const scoreBadge = getScoreBadgeColor(product.overallScore || product.overallBaseScore);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Product Hero Header */}
       <View style={styles.heroCard}>
         <View style={styles.heroRow}>
@@ -31,7 +37,7 @@ export const ProductDetailScreen: React.FC<Props> = ({ product }) => {
             <Image source={{ uri: product.imageUrl }} style={styles.productImg} />
           ) : (
             <View style={styles.placeholderImg}>
-              <Text style={styles.placeholderText}>📦 Snack</Text>
+              <NutriIcon name="snack" size={32} color="#94A3B8" />
             </View>
           )}
 
@@ -40,21 +46,25 @@ export const ProductDetailScreen: React.FC<Props> = ({ product }) => {
             <Text style={styles.productName}>{product.name}</Text>
             <Text style={styles.categoryTag}>{product.category}</Text>
 
-            {product.isRegionalUnbranded && (
-              <View style={styles.regionalBadge}>
-                <Text style={styles.regionalText}>📍 Regional Unbranded Snack</Text>
-              </View>
-            )}
+            <View style={styles.badgeWrap}>
+              {product.isRegionalUnbranded && (
+                <View style={styles.regionalBadge}>
+                  <NutriIcon name="separator" size={8} color="#B45309" />
+                  <Text style={styles.regionalText}> Regional Unbranded</Text>
+                </View>
+              )}
 
-            {product.verificationStatus === 'verified' && (
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>✓ Community Verified</Text>
-              </View>
-            )}
+              {product.verificationStatus === 'verified' && (
+                <View style={styles.verifiedBadge}>
+                  <NutriIcon name="verified" size={12} color="#15803D" />
+                  <Text style={styles.verifiedText}> Verified</Text>
+                </View>
+              )}
+            </View>
           </View>
         </View>
 
-        {/* Base Safety Score */}
+        {/* Base Safety Score Row */}
         <View style={styles.scoreRow}>
           <View style={[styles.scoreBadge, { backgroundColor: scoreBadge.bg }]}>
             <Text style={[styles.scoreValue, { color: scoreBadge.text }]}>
@@ -80,9 +90,12 @@ export const ProductDetailScreen: React.FC<Props> = ({ product }) => {
 
       {/* Feature 2: Interactive Ingredient Intelligence */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>🧪 Interactive Ingredient Intelligence</Text>
+        <View style={styles.sectionTitleRow}>
+          <NutriIcon name="flask" size={18} color="#0D9488" />
+          <Text style={styles.sectionTitle}> Interactive Ingredient Intelligence</Text>
+        </View>
         <Text style={styles.sectionSub}>
-          Tap any card below to answer 6 key questions: what it is, why added, body effect, frequency, alternatives, and common foods.
+          Tap any card below to reveal 6 key insights: what it is, why added, body effect, usage limits, healthy alternatives, and common foods.
         </Text>
       </View>
 
@@ -101,7 +114,9 @@ export const ProductDetailScreen: React.FC<Props> = ({ product }) => {
           );
         })
       ) : (
-        <Text style={styles.emptyText}>No ingredients parsed yet for this product.</Text>
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyText}>No extracted ingredients recorded for this product.</Text>
+        </View>
       )}
     </ScrollView>
   );
@@ -114,28 +129,35 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 40,
   },
   heroCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    elevation: 3,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
   },
   heroRow: {
     flexDirection: 'row',
-    gap: 14,
+    alignItems: 'center',
   },
   productImg: {
     width: 80,
     height: 80,
-    borderRadius: 12,
+    borderRadius: 14,
+    backgroundColor: '#F1F5F9',
   },
   placeholderImg: {
     width: 80,
     height: 80,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center',
@@ -147,16 +169,18 @@ const styles = StyleSheet.create({
   },
   heroMeta: {
     flex: 1,
+    marginLeft: 14,
   },
   brandName: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#0D9488',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   productName: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '800',
     color: '#0F172A',
     marginTop: 2,
   },
@@ -165,40 +189,45 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
-  regionalBadge: {
-    backgroundColor: '#EFF6FF',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+  badgeWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
     marginTop: 6,
+  },
+  regionalBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   regionalText: {
     fontSize: 10,
-    fontWeight: '800',
-    color: '#1D4ED8',
+    fontWeight: '700',
+    color: '#B45309',
   },
   verifiedBadge: {
     backgroundColor: '#DCFCE7',
-    alignSelf: 'flex-start',
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 6,
-    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   verifiedText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#15803D',
   },
   scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 14,
-    paddingTop: 12,
+    marginTop: 16,
+    paddingTop: 14,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    gap: 12,
   },
   scoreBadge: {
     flexDirection: 'row',
@@ -214,8 +243,10 @@ const styles = StyleSheet.create({
   scoreDenom: {
     fontSize: 12,
     fontWeight: '700',
+    marginLeft: 2,
   },
   scoreTextCol: {
+    marginLeft: 12,
     flex: 1,
   },
   scoreHeadline: {
@@ -226,13 +257,19 @@ const styles = StyleSheet.create({
   scoreSub: {
     fontSize: 11,
     color: '#64748B',
+    marginTop: 1,
   },
   sectionHeader: {
+    marginTop: 8,
     marginBottom: 12,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '800',
     color: '#0F172A',
   },
   sectionSub: {
@@ -241,10 +278,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
     lineHeight: 16,
   },
+  emptyCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
   emptyText: {
     fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    marginVertical: 20,
+    color: '#94A3B8',
   },
 });

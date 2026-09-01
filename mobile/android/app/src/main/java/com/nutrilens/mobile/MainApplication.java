@@ -8,6 +8,7 @@ import com.facebook.react.shell.MainReactPackage;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactNativeHost;
 import com.facebook.soloader.SoLoader;
+import com.horcrux.svg.SvgPackage;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,7 +24,9 @@ public class MainApplication extends Application implements ReactApplication {
         @Override
         protected List<ReactPackage> getPackages() {
           return Arrays.<ReactPackage>asList(
-              new MainReactPackage()
+              new MainReactPackage(),
+              new CameraPackage(),
+              new SvgPackage()
           );
         }
 

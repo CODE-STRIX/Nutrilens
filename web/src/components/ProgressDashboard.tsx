@@ -25,6 +25,7 @@ interface ProgressDashboardProps {
   activePersona: UserProfile;
   onNavigateToPatterns: () => void;
   onNavigateToIntelligence: (productId?: string) => void;
+  activeProfile?: { id: string; name: string; healthConditions: string[]; [key: string]: any };
   onNavigateToRecalls?: () => void;
   onNavigateToAlternatives?: () => void;
 }
@@ -177,6 +178,7 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
   activePersona,
   onNavigateToPatterns,
   onNavigateToIntelligence,
+  activeProfile,
   onNavigateToRecalls,
   onNavigateToAlternatives
 }) => {

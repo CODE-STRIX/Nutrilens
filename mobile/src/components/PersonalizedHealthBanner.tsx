@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { NutriIcon } from './NutriIcon';
 import { PersonalizedAnalysis, UserProfile } from '../../../shared/types';
 
 interface Props {
@@ -42,13 +43,17 @@ export const PersonalizedHealthBanner: React.FC<Props> = ({ analysis, userProfil
 
       {/* Summary Tip */}
       <View style={styles.tipBox}>
-        <Text style={styles.tipText}>💡 {analysis.personalizedTip}</Text>
+        <NutriIcon name="bulb" size={14} color={theme.text} />
+        <Text style={styles.tipText}> {analysis.personalizedTip}</Text>
       </View>
 
       {/* Allergy Warnings */}
       {analysis.allergyWarnings.length > 0 && (
         <View style={styles.allergyBox}>
-          <Text style={styles.allergyTitle}>🚨 ALLERGY ALERT DETECTED</Text>
+          <View style={styles.boxTitleRow}>
+            <NutriIcon name="allergy" size={14} color="#B91C1C" />
+            <Text style={styles.allergyTitle}> ALLERGY ALERT DETECTED</Text>
+          </View>
           {analysis.allergyWarnings.map((warn: any, i: number) => (
             <Text key={i} style={styles.allergyText}>
               • Contains <Text style={{ fontWeight: '700' }}>{warn.ingredientName}</Text> ({warn.allergy.toUpperCase()})
@@ -60,7 +65,10 @@ export const PersonalizedHealthBanner: React.FC<Props> = ({ analysis, userProfil
       {/* Condition Flags */}
       {analysis.conditionFlags.length > 0 && (
         <View style={styles.flagsBox}>
-          <Text style={styles.flagsTitle}>⚠️ Health Condition Flags</Text>
+          <View style={styles.boxTitleRow}>
+            <NutriIcon name="alert" size={14} color="#92400E" />
+            <Text style={styles.flagsTitle}> Health Condition Flags</Text>
+          </View>
           {analysis.conditionFlags.map((flag: any, idx: number) => (
             <View key={idx} style={styles.flagCard}>
               <View style={styles.flagHeader}>
@@ -78,13 +86,16 @@ export const PersonalizedHealthBanner: React.FC<Props> = ({ analysis, userProfil
       {/* Goal Alignments */}
       {analysis.goalAlignment.length > 0 && (
         <View style={styles.goalsBox}>
-          <Text style={styles.goalsTitle}>🎯 Your Goal Alignment</Text>
+          <View style={styles.boxTitleRow}>
+            <NutriIcon name="target" size={14} color="#047857" />
+            <Text style={styles.goalsTitle}> Your Goal Alignment</Text>
+          </View>
           <View style={styles.goalsGrid}>
             {analysis.goalAlignment.map((g: any, idx: number) => (
               <View key={idx} style={[styles.goalChip, g.isAligned ? styles.goalPass : styles.goalFail]}>
-                <Text style={styles.goalIcon}>{g.isAligned ? '✓' : '✕'}</Text>
+                <NutriIcon name={g.isAligned ? "check" : "close"} size={10} color={g.isAligned ? "#047857" : "#B91C1C"} />
                 <Text style={styles.goalText}>
-                  {g.goal.replace('_', ' ').toUpperCase()}
+                  {' '}{g.goal.replace('_', ' ').toUpperCase()}
                 </Text>
               </View>
             ))}
@@ -146,10 +157,17 @@ const styles = StyleSheet.create({
     marginTop: -4,
   },
   tipBox: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     padding: 10,
     borderRadius: 10,
-    marginBottom: 12,
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  boxTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   tipText: {
     fontSize: 13,

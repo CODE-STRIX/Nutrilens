@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { NutriIcon } from '../components/NutriIcon';
 import { FssaiRecallNotice, UserRecallAlert } from '../../../shared/types';
 import { RecallService } from '../services/recallService';
 
@@ -18,19 +19,26 @@ export const RecallAlertScreen: React.FC = () => {
   const getHazardBadgeStyle = (level: string) => {
     switch (level) {
       case 'CRITICAL':
-        return { bg: '#FEF2F2', text: '#991B1B' };
+        return { bg: '#FEE2E2', text: '#991B1B' };
       case 'HIGH':
-        return { bg: '#FFF7ED', text: '#9A3412' };
+        return { bg: '#FFEDD5', text: '#9A3412' };
       default:
-        return { bg: '#FEFCE8', text: '#713F12' };
+        return { bg: '#FEF3C7', text: '#713F12' };
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>🚨 FSSAI Recall & Safety Center</Text>
+        <View style={styles.titleRow}>
+          <NutriIcon name="recall" size={24} color="#EF4444" />
+          <Text style={styles.title}> FSSAI Recall & Safety Center</Text>
+        </View>
         <Text style={styles.subtitle}>
           Retroactive safety warnings for previously scanned packaged foods in India
         </Text>
@@ -41,18 +49,20 @@ export const RecallAlertScreen: React.FC = () => {
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'my_alerts' && styles.activeTabBtn]}
           onPress={() => setActiveTab('my_alerts')}
+          activeOpacity={0.8}
         >
           <Text style={[styles.tabText, activeTab === 'my_alerts' && styles.activeTabText]}>
-            ⚠️ My Retroactive Alerts ({userAlerts.filter((a) => !a.isRead).length})
+            My Retroactive Alerts ({userAlerts.filter((a) => !a.isRead).length})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'all_notices' && styles.activeTabBtn]}
           onPress={() => setActiveTab('all_notices')}
+          activeOpacity={0.8}
         >
           <Text style={[styles.tabText, activeTab === 'all_notices' && styles.activeTabText]}>
-            📜 Official FSSAI Notices ({allNotices.length})
+            Official FSSAI Notices ({allNotices.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -91,6 +101,7 @@ export const RecallAlertScreen: React.FC = () => {
                     <TouchableOpacity
                       style={styles.markReadBtn}
                       onPress={() => handleMarkRead(alert.id)}
+                      activeOpacity={0.8}
                     >
                       <Text style={styles.markReadText}>✓ Acknowledge & Mark Read</Text>
                     </TouchableOpacity>
@@ -99,37 +110,39 @@ export const RecallAlertScreen: React.FC = () => {
               );
             })
           ) : (
-            <Text style={styles.emptyText}>No active recall alerts for your scanned items.</Text>
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyText}>No active recall warnings for your scanned items.</Text>
+            </View>
           )}
         </View>
       )}
 
-      {/* Tab 2: All Notices */}
+      {/* Tab 2: All FSSAI Notices */}
       {activeTab === 'all_notices' && (
         <View style={styles.section}>
           {allNotices.map((notice) => {
             const style = getHazardBadgeStyle(notice.hazardLevel);
+            const noticeDate = (notice as any).noticeDate || notice.dateIssued;
+            const batches = notice.batchNumbers || (notice as any).affectedBatches || [];
 
             return (
               <View key={notice.id} style={styles.noticeCard}>
                 <View style={styles.cardHeader}>
                   <View style={[styles.badge, { backgroundColor: style.bg }]}>
                     <Text style={[styles.badgeText, { color: style.text }]}>
-                      {notice.hazardLevel}
+                      FSSAI NOTICE • {notice.hazardLevel}
                     </Text>
                   </View>
-                  <Text style={styles.noticeNum}>{notice.noticeNumber}</Text>
+                  <Text style={styles.dateText}>{noticeDate}</Text>
                 </View>
 
                 <Text style={styles.productTitle}>{notice.productName}</Text>
-                <Text style={styles.brandText}>Manufacturer: {notice.brand}</Text>
-                <Text style={styles.reasonText}>Hazard Description: {notice.reason}</Text>
-                <Text style={styles.batchText}>
-                  Affected Batches: {notice.batchNumbers.join(', ')}
-                </Text>
-                <Text style={styles.regionText}>
-                  Affected States: {notice.affectedRegions.join(', ')}
-                </Text>
+                <Text style={styles.brandText}>Manufacturer: {notice.brand || 'National Brands'}</Text>
+                <Text style={styles.reasonText}>Hazard: {notice.reason}</Text>
+
+                <View style={styles.lotBox}>
+                  <Text style={styles.lotText}>Affected Lots: {batches.join(', ')}</Text>
+                </View>
               </View>
             );
           })}
@@ -146,44 +159,50 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 40,
   },
   header: {
     marginBottom: 14,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   title: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
     color: '#0F172A',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#64748B',
     marginTop: 2,
-    lineHeight: 16,
+    lineHeight: 18,
   },
   tabRow: {
     flexDirection: 'row',
     backgroundColor: '#E2E8F0',
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 4,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   tabBtn: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 10,
   },
   activeTabBtn: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0D9488',
   },
   tabText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    color: '#475569',
   },
   activeTabText: {
-    color: '#2563EB',
+    color: '#FFFFFF',
     fontWeight: '800',
   },
   section: {
@@ -192,9 +211,10 @@ const styles = StyleSheet.create({
   alertCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    elevation: 2,
   },
   unreadCard: {
     borderLeftWidth: 4,
@@ -204,16 +224,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   badge: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 6,
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   unreadDot: {
     width: 8,
@@ -228,71 +248,75 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 12,
-    color: '#64748B',
+    fontWeight: '600',
+    color: '#0D9488',
     marginTop: 2,
   },
   reasonText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#334155',
     marginTop: 6,
-    lineHeight: 16,
+    lineHeight: 18,
   },
   actionBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
+    backgroundColor: '#FEF3C7',
+    borderRadius: 10,
     padding: 10,
-    marginTop: 8,
+    marginTop: 10,
   },
   actionTitle: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#991B1B',
+    color: '#B45309',
   },
   actionText: {
     fontSize: 12,
-    color: '#1E293B',
+    color: '#78350F',
     marginTop: 2,
   },
   markReadBtn: {
-    backgroundColor: '#2563EB',
-    borderRadius: 8,
-    paddingVertical: 8,
+    backgroundColor: '#0D9488',
+    borderRadius: 10,
+    paddingVertical: 10,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 12,
   },
   markReadText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
   },
   noticeCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    elevation: 2,
   },
-  noticeNum: {
+  dateText: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  lotBox: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 10,
+  },
+  lotText: {
     fontSize: 11,
     color: '#64748B',
-    fontWeight: '700',
-  },
-  batchText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#475569',
-    marginTop: 6,
-  },
-  regionText: {
-    fontSize: 11,
-    color: '#2563EB',
     fontWeight: '600',
-    marginTop: 2,
+  },
+  emptyCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 14,
+    alignItems: 'center',
   },
   emptyText: {
     fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    marginVertical: 20,
+    color: '#94A3B8',
   },
 });

@@ -23,8 +23,8 @@ import { ComparisonResult, AlternativeRecommendation } from '@shared/types/perso
 import sampleProducts from '../../../data/indian-food-products.json';
 import sampleLessons from '../../../data/learning-lessons.json';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const BASE_URL = '/api';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = (import.meta as any).env?.VITE_API_URL || '/api';
 
 // Ultra-fast fetch wrapper with 200ms timeout for instantaneous tab rendering
 const fastFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {

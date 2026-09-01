@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { NutriIcon } from './NutriIcon';
 import { FssaiRecallNotice } from '../../../shared/types';
 
 interface Props {
@@ -24,7 +25,8 @@ export const RecallAlertBanner: React.FC<Props> = ({ recallNotice }) => {
     <View style={[styles.bannerContainer, { backgroundColor: style.bg, borderColor: style.border }]}>
       <View style={styles.headerRow}>
         <View style={[styles.hazardBadge, { backgroundColor: style.badge }]}>
-          <Text style={styles.hazardBadgeText}>⚠️ FSSAI RECALL: {recallNotice.hazardLevel}</Text>
+          <NutriIcon name="recall" size={12} color="#FFFFFF" />
+          <Text style={styles.hazardBadgeText}> FSSAI RECALL: {recallNotice.hazardLevel}</Text>
         </View>
         <Text style={styles.noticeNumber}>{recallNotice.noticeNumber}</Text>
       </View>
@@ -41,7 +43,10 @@ export const RecallAlertBanner: React.FC<Props> = ({ recallNotice }) => {
       )}
 
       <View style={styles.actionBox}>
-        <Text style={styles.actionTitle}>🛑 Required Consumer Action:</Text>
+        <View style={styles.actionTitleRow}>
+          <NutriIcon name="alert" size={12} color="#991B1B" />
+          <Text style={styles.actionTitle}> Required Consumer Action:</Text>
+        </View>
         <Text style={styles.actionBody}>{recallNotice.actionRequired}</Text>
       </View>
     </View>
@@ -65,6 +70,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   hazardBadgeText: {
     color: '#FFFFFF',
@@ -98,6 +105,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 8,
     marginTop: 8,
+  },
+  actionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   actionTitle: {
     fontSize: 11,

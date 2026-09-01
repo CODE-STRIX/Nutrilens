@@ -28,9 +28,9 @@ app.use(express.urlencoded({ extended: true }));
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({
-    status: 'ok',
     service: 'NutriLens API Backend',
     version: '1.0.0',
+    team: 'CODESTRIX',
     timestamp: new Date().toISOString()
   });
 });

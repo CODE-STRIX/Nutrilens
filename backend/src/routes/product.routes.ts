@@ -8,6 +8,7 @@ router.get('/additives', productController.getAllAdditives);
 router.get('/additives/:id', productController.getAdditiveById);
 
 // Product Lookup & Search
+router.get('/', productController.getAllProducts);
 router.get('/search', productController.searchProducts);
 router.get('/barcode/:barcode', productController.getProductByBarcode);
 router.get('/:id', productController.getProductById);

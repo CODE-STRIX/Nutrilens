@@ -4,8 +4,18 @@ import { recallService } from '../services/recall/recallService';
 export class RecallController {
   public getAllNotices = async (_req: Request, res: Response): Promise<void> => {
     try {
-      const notices = recallService.getAllRecallNotices();
-      res.json({ success: true, count: notices.length, data: notices });
+      const rawNotices = recallService.getAllRecallNotices();
+      const notices = rawNotices.map(n => ({
+        ...n,
+        title: n.noticeNumber ? `FSSAI Alert: ${n.productName} Recall` : `${n.productName} Safety Notice`,
+        announcementDate: n.dateIssued || new Date().toISOString().split('T')[0],
+        affectedBatches: n.batchNumbers || [],
+        fssaiNoticeUrl: n.officialNoticeUrl || 'https://fssai.gov.in',
+        dateIssued: n.dateIssued,
+        officialNoticeUrl: n.officialNoticeUrl,
+        batchNumbers: n.batchNumbers
+      }));
+      res.json(notices);
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

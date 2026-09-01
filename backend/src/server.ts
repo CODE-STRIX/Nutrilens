@@ -38,14 +38,24 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ── Person E Routes (Data & Safety) ──────────────────────────────────────────
-if (productRoutes) app.use('/api/products', productRoutes);
-if (recallRoutes) app.use('/api/recalls', recallRoutes);
-if (communityRoutes) app.use('/api/community', communityRoutes);
+if (productRoutes) {
+  app.use('/api/products', productRoutes);
+  app.use('/api/product', productRoutes);
+}
+if (recallRoutes) {
+  app.use('/api/recalls', recallRoutes);
+  app.use('/api/recall', recallRoutes);
+}
+if (communityRoutes) {
+  app.use('/api/community', communityRoutes);
+}
 
 // ── Person F Routes (Intelligence & User) ───────────────────────────────────
 app.use('/api/auth', userRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/personalize', personalizationRoutes);
+app.use('/api/personalization', personalizationRoutes);
 app.use('/api/dashboard', analyticsRoutes);
 app.use('/api/learning', learningRoutes);
 

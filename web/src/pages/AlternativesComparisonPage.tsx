@@ -27,6 +27,28 @@ const defaultAlternative: AlternativeRecommendation = {
 };
 
 const defaultComparison: ComparisonResult = {
+  productA: {
+    id: 'prod-maggi-2min',
+    name: 'Maggi 2-Minute Masala Noodles',
+    brand: 'Nestlé',
+    category: 'Instant Noodles',
+    ingredientText: 'Refined Wheat Flour, Palm Oil, Salt, MSG (INS 621), Tartrazine (INS 102)',
+    ingredients: [],
+    additives: [],
+    manufacturingRationale: [],
+    createdAt: new Date().toISOString()
+  },
+  productB: {
+    id: 'prod-muesli-whole-grain',
+    name: 'Whole Grain Millet Muesli',
+    brand: 'TrueElements',
+    category: 'Breakfast Cereals',
+    ingredientText: 'Whole Grain Rolled Oats, Bajra Flakes, Jowar Flakes, Pumpkin Seeds, Raw Honey.',
+    ingredients: [],
+    additives: [],
+    manufacturingRationale: [],
+    createdAt: new Date().toISOString()
+  },
   productAPersonalizedScore: 17,
   productBPersonalizedScore: 88,
   winningProduct: 'B',

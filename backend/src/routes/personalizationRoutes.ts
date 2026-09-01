@@ -7,10 +7,14 @@ const router = Router();
 // POST /api/personalize - Analyze a product against the authenticated user's profile
 router.post('/', authenticateToken, PersonalizationController.analyzeProduct);
 
-// POST /api/personalize/recommend-alternative - Get a healthier alternative for a given product
+// Alternative recommendations
 router.post('/recommend-alternative', authenticateToken, PersonalizationController.recommendAlternative);
+router.post('/alternative', authenticateToken, PersonalizationController.recommendAlternative);
+router.get('/alternative/:id', authenticateToken, PersonalizationController.recommendAlternative);
+router.get('/recommend/:id', authenticateToken, PersonalizationController.recommendAlternative);
 
-// POST /api/personalize/compare - Side-by-side product comparison (Smart Shopping Assistant)
+// Product comparison
 router.post('/compare', authenticateToken, PersonalizationController.compareProducts);
+router.get('/compare', authenticateToken, PersonalizationController.compareProducts);
 
 export default router;

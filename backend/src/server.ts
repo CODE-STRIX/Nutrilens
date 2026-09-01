@@ -28,24 +28,32 @@ app.use(express.urlencoded({ extended: true }));
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({
-    status: 'ok',
-    service: 'Nutri Lens API Backend (Person E & Person F & ML Services)',
+    service: 'NutriLens API Backend',
     version: '1.0.0',
     team: 'CODESTRIX',
-    event: 'Smart India Hackathon 2026',
     timestamp: new Date().toISOString()
   });
 });
 
 // ── Person E Routes (Data & Safety) ──────────────────────────────────────────
-if (productRoutes) app.use('/api/products', productRoutes);
-if (recallRoutes) app.use('/api/recalls', recallRoutes);
-if (communityRoutes) app.use('/api/community', communityRoutes);
+if (productRoutes) {
+  app.use('/api/products', productRoutes);
+  app.use('/api/product', productRoutes);
+}
+if (recallRoutes) {
+  app.use('/api/recalls', recallRoutes);
+  app.use('/api/recall', recallRoutes);
+}
+if (communityRoutes) {
+  app.use('/api/community', communityRoutes);
+}
 
 // ── Person F Routes (Intelligence & User) ───────────────────────────────────
 app.use('/api/auth', userRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/personalize', personalizationRoutes);
+app.use('/api/personalization', personalizationRoutes);
 app.use('/api/dashboard', analyticsRoutes);
 app.use('/api/learning', learningRoutes);
 

@@ -19,7 +19,9 @@ import {
   Layers, 
   HeartPulse, 
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Barcode,
+  X
 } from 'lucide-react';
 
 interface ProductIntelligenceProps {
@@ -35,6 +37,12 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initia
   const [selectedMapNode, setSelectedMapNode] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'CARDS' | 'MAP' | 'TRANSPARENCY'>('CARDS');
   const [loading, setLoading] = useState(true);
+
+  // Barcode lookup state
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
+  const [barcodeError, setBarcodeError] = useState<string | null>(null);
+  const [barcodeSource, setBarcodeSource] = useState<'local_db' | 'open_food_facts' | null>(null);
 
   useEffect(() => {
     const loadCatalog = async () => {
@@ -58,7 +66,33 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initia
 
   const handleSelectProduct = async (product: Product) => {
     setSelectedProduct(product);
+    setBarcodeError(null);
+    setBarcodeSource(null);
     setLoading(true);
+    const res = await WebApiService.analyzeProduct(product.id);
+    setAnalysis(res);
+    setLoading(false);
+  };
+
+  const handleBarcodeSearch = async () => {
+    const code = barcodeInput.trim();
+    if (!code) return;
+    setBarcodeLoading(true);
+    setBarcodeError(null);
+    setBarcodeSource(null);
+    const { product, source } = await WebApiService.getProductByBarcode(code);
+    if (!product) {
+      setBarcodeError(`No product found for barcode "${code}". It may not be in Open Food Facts yet.`);
+      setBarcodeLoading(false);
+      return;
+    }
+    // Add to local catalog list if not already present
+    setProducts(prev => prev.some(p => p.id === product.id) ? prev : [product, ...prev]);
+    setBarcodeSource(source as 'local_db' | 'open_food_facts');
+    setBarcodeLoading(false);
+    // Load analysis
+    setLoading(true);
+    setSelectedProduct(product);
     const res = await WebApiService.analyzeProduct(product.id);
     setAnalysis(res);
     setLoading(false);
@@ -81,55 +115,143 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initia
               <Sparkles className="w-3.5 h-3.5" />
               Features 2 & 3 — Ingredient Intelligence & Interaction Map
             </div>
-            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold text-white">
-              Product & Ingredient <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Intelligence</span>
+            <h1 className="font-heading text-2xl sm:text-3xl font-black text-white">
+              Product &amp; Ingredient <span className="text-emerald-400 font-black">Intelligence</span>
             </h1>
             <p className="text-slate-400 text-sm">
               Look up any Indian packaged food or regional snack to decode its ingredient list in plain words.
             </p>
           </div>
 
-          {/* Product Picker Dropdown */}
-          <div className="relative min-w-[280px]">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search products (e.g. Maggi, Lay's, Muesli)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 transition-all"
-              />
-            </div>
-
-            {searchQuery && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-30 max-h-60 overflow-y-auto divide-y divide-slate-800">
-                {filteredProducts.map(p => (
-                  <div
-                    key={p.id}
-                    onClick={() => {
-                      handleSelectProduct(p);
-                      setSearchQuery('');
-                    }}
-                    className="p-3 hover:bg-slate-800/80 cursor-pointer transition-colors"
-                  >
-                    <div className="text-xs font-bold text-white">{p.name}</div>
-                    <div className="text-[10px] text-slate-400">{p.brand} • {p.category}</div>
-                  </div>
-                ))}
+          <div className="flex items-center gap-3">
+            {/* Product Picker Dropdown */}
+            <div className="relative min-w-[240px]">
+              <div className="relative flex items-center w-full">
+                <Search className="w-4 h-4 absolute left-3.5 text-emerald-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search products (Maggi, Lay's)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-900/90 border border-slate-700 rounded-xl input-with-icon py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-semibold transition-all"
+                />
               </div>
-            )}
+
+              {searchQuery && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-30 max-h-60 overflow-y-auto divide-y divide-slate-800">
+                  {filteredProducts.map(p => (
+                    <div
+                      key={p.id}
+                      onClick={() => {
+                        handleSelectProduct(p);
+                        setSearchQuery('');
+                      }}
+                      className="p-3 hover:bg-slate-800/80 cursor-pointer transition-colors"
+                    >
+                      <div className="text-xs font-bold text-white">{p.name}</div>
+                      <div className="text-[10px] text-slate-400">{p.brand} • {p.category}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* ── Barcode Lookup Panel ─────────────────────────────── */}
+        <div className="pt-4 border-t border-slate-800/80 space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
+            <Barcode className="w-4 h-4 text-emerald-400" />
+            Scan by Barcode
+            <span className="text-slate-500 font-normal">— enter any real product barcode number</span>
+          </div>
+
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Barcode className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                id="barcode-input"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="e.g. 3017620422003 (Nutella), 8901491101820 (Lay's), 5449000000996 (Coca-Cola)..."
+                value={barcodeInput}
+                onChange={e => { setBarcodeInput(e.target.value); setBarcodeError(null); }}
+                onKeyDown={e => e.key === 'Enter' && handleBarcodeSearch()}
+                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all font-mono tracking-wider"
+              />
+              {barcodeInput && (
+                <button
+                  onClick={() => { setBarcodeInput(''); setBarcodeError(null); setBarcodeSource(null); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <button
+              id="barcode-search-btn"
+              onClick={handleBarcodeSearch}
+              disabled={barcodeLoading || !barcodeInput.trim()}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 shrink-0"
+            >
+              {barcodeLoading
+                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                : <Search className="w-3.5 h-3.5" />
+              }
+              {barcodeLoading ? 'Looking up...' : 'Look Up'}
+            </button>
+          </div>
+
+          {/* Error state */}
+          {barcodeError && (
+            <div className="flex flex-col gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>{barcodeError}</span>
+              </div>
+              <div className="text-[10px] text-rose-500/80 pl-5 space-y-0.5">
+                <p>⚠️ Many Indian brands (Britannia, Haldirams, MDH, etc.) are not yet in Open Food Facts.</p>
+                <p>
+                  Try global products like Nutella (<span className="font-mono">3017620422003</span>), Coca-Cola (<span className="font-mono">5449000000996</span>), or Lay's (<span className="font-mono">8901491101820</span>).
+                </p>
+                <a
+                  href={`https://world.openfoodfacts.org/product/${barcodeInput.trim()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 underline underline-offset-2"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Search this barcode on Open Food Facts website
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Success source badge */}
+          {barcodeSource && selectedProduct && (
+            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+              barcodeSource === 'open_food_facts'
+                ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
+                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            }`}>
+              <CheckCircle2 className="w-3 h-3" />
+              {barcodeSource === 'open_food_facts'
+                ? `Found on Open Food Facts — "${selectedProduct.name}"`
+                : `Found in local database — "${selectedProduct.name}"`
+              }
+            </div>
+          )}
+        </div>
+
         {/* Product Selector Quick Pills */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80">
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800/60">
           <span className="text-xs font-medium text-slate-400 mr-2">Sample Catalog:</span>
           {products.map(p => (
             <button
               key={p.id}
               onClick={() => handleSelectProduct(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 selectedProduct?.id === p.id
                   ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
                   : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
@@ -275,71 +397,71 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initia
 
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="font-heading font-bold text-sm text-white">{ing.name}</h4>
+                              <h4 className="font-heading font-extrabold text-base text-white">{ing.name}</h4>
                               {ing.insCode && (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
                                   {ing.insCode}
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] text-slate-400">{ing.purpose || 'Base component'}</p>
+                            <p className="text-xs text-slate-200 font-semibold">{ing.purpose || 'Base component'}</p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3">
                           {ing.isAdditive && details?.hazardRating && (
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
                               details.hazardRating === 'Safe'
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                             }`}>
                               {details.hazardRating}
                             </span>
                           )}
 
-                          {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                          {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-400" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
                         </div>
                       </div>
 
                       {/* 6-Facet Intelligence Expandable Content */}
                       {isExpanded && (
-                        <div className="p-5 border-t border-slate-800/80 bg-slate-900/60 space-y-4 animate-fadeIn">
+                        <div className="p-5 border-t border-slate-800/80 bg-slate-900/90 space-y-4 animate-fadeIn">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             
                             {/* Facet 1: What It Is */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">1. What It Is</div>
-                              <p className="text-xs text-slate-300">{details?.description || `${ing.name} is a primary component of this food.`}</p>
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
+                              <div className="text-xs font-black text-emerald-400 uppercase tracking-wider mb-1">1. What It Is</div>
+                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.description || `${ing.name} is a primary component of this food.`}</p>
                             </div>
 
                             {/* Facet 2: Why It Was Added */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <div className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider mb-1">2. Why Manufacturer Added It</div>
-                              <p className="text-xs text-slate-300">{details?.manufacturingRationale || ing.purpose || 'Used for texture or shelf stability.'}</p>
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
+                              <div className="text-xs font-black text-cyan-400 uppercase tracking-wider mb-1">2. Why Manufacturer Added It</div>
+                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.manufacturingRationale || ing.purpose || 'Used for texture or shelf stability.'}</p>
                             </div>
 
                             {/* Facet 3: What It Does in Body */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1">3. Biological Body Effect</div>
-                              <p className="text-xs text-slate-300">{details?.biologicalImpact || 'Digested as standard dietary component.'}</p>
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
+                              <div className="text-xs font-black text-amber-400 uppercase tracking-wider mb-1">3. Biological Body Effect</div>
+                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.biologicalImpact || 'Digested as standard dietary component.'}</p>
                             </div>
 
                             {/* Facet 4: Safe Frequency Guidance */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <div className="text-[11px] font-bold text-purple-400 uppercase tracking-wider mb-1">4. Consumption Frequency</div>
-                              <p className="text-xs text-slate-300">{details?.safeFrequency || 'Safe in standard dietary proportions.'}</p>
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
+                              <div className="text-xs font-black text-purple-400 uppercase tracking-wider mb-1">4. Consumption Frequency</div>
+                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.safeFrequency || 'Safe in standard dietary proportions.'}</p>
                             </div>
 
                             {/* Facet 5: Healthier Alternatives */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1">5. Healthier Alternatives</div>
-                              <p className="text-xs text-slate-300">{details?.healthierAlternatives?.join(', ') || 'Cold-pressed natural oils or whole food extracts.'}</p>
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
+                              <div className="text-xs font-black text-emerald-400 uppercase tracking-wider mb-1">5. Healthier Alternatives</div>
+                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.healthierAlternatives?.join(', ') || 'Cold-pressed natural oils or whole food extracts.'}</p>
                             </div>
 
                             {/* Facet 6: Where Else Found */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">6. Where Else Found</div>
-                              <p className="text-xs text-slate-300">{details?.commonFoods?.join(', ') || 'Common packaged savory snacks.'}</p>
+                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
+                              <div className="text-xs font-black text-cyan-300 uppercase tracking-wider mb-1">6. Where Else Found</div>
+                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.commonFoods?.join(', ') || 'Common packaged savory snacks.'}</p>
                             </div>
 
                           </div>

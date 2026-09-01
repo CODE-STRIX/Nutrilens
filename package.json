@@ -1,0 +1,12 @@
+{
+  "name": "nutri-lens-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nutri Lens - AI-Powered Food Label & Ingredient Intelligence Platform",
+  "scripts": {
+    "build": "cd web && npm install && npm run build",
+    "install:all": "cd web && npm install && cd ../backend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:web": "cd web && npm run dev"
+  }
+}

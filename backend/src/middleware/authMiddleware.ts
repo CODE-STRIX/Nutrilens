@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { JWTPayload } from '../../../shared/types/user';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'nutri_lens_sih_2026_codestrix_secret_key_super_secure';
+const JWT_SECRET = process.env.JWT_SECRET || 'nutrilens_jwt_secret_key_default_secure';
 
 export interface AuthenticatedRequest extends Request {
   user?: JWTPayload;
@@ -13,7 +13,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    // For easy API testing in SIH demo, if no token provided, fallback to demo user 'usr-demo-rahul'
+    // Default demo user fallback for testing
     req.user = { userId: 'usr-demo-rahul', email: 'rahul.sharma@example.com' };
     return next();
   }

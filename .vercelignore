@@ -1,0 +1,7 @@
+mobile/
+backend/
+scratch/
+.git
+.github
+scaffold-repo.ps1
+scaffold-repo.sh

@@ -5,12 +5,18 @@ export class ProductController {
   public getProductByBarcode = async (req: Request, res: Response): Promise<void> => {
     try {
       const { barcode } = req.params;
-      const product = productService.getProductByBarcode(barcode);
+      // Try local DB first; if not found, falls back to Open Food Facts API
+      const product = await productService.getProductByBarcodeWithFallback(barcode);
       if (!product) {
-        res.status(404).json({ success: false, message: `No product found matching barcode ${barcode}` });
+        res.status(404).json({
+          success: false,
+          message: `No product found for barcode ${barcode} — not in local database and not found on Open Food Facts.`,
+          barcode
+        });
         return;
       }
-      res.json({ success: true, data: product });
+      const isFromOff = product.id.startsWith('OFF-');
+      res.json({ success: true, source: isFromOff ? 'open_food_facts' : 'local_db', data: product });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -25,6 +31,15 @@ export class ProductController {
         return;
       }
       res.json({ success: true, data: product });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  };
+
+  public getAllProducts = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const results = productService.searchProducts('');
+      res.json({ success: true, count: results.length, data: results });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

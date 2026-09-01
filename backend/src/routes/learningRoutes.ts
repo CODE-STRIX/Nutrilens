@@ -6,7 +6,9 @@ const router = Router();
 // GET /api/learning/lesson?triggers=INS_211,HIGH_SODIUM - Scan-triggered lesson delivery
 router.get('/lesson', LearningController.getLessonForScan);
 
-// GET /api/learning/all - Full lesson library
+// Full lesson library
+router.get('/', LearningController.getAllLessons);
+router.get('/lessons', LearningController.getAllLessons);
 router.get('/all', LearningController.getAllLessons);
 
 // GET /api/learning/:id - Single lesson by ID

@@ -1,592 +1,753 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Product, 
-  PersonalizedAnalysisResult, 
-  Ingredient,
-  Additive 
-} from '@shared/types';
+import { Product, PersonalizedAnalysisResult, Additive } from '@shared/types';
+import { UserProfile } from '@shared/types/user';
 import { WebApiService } from '../services/api';
-import { 
-  Sparkles, 
-  Search, 
-  AlertTriangle, 
-  CheckCircle2, 
-  ChevronDown, 
-  ChevronUp, 
-  Network, 
-  ShieldAlert, 
-  Info, 
-  Layers, 
-  HeartPulse, 
-  RefreshCw,
-  ExternalLink,
-  Barcode,
-  X
+import { scoreProduct, getBandLabel, getBandColour, getBandCssClass, getBandTint, scoreToArcOffset } from '../utils/scoring';
+import {
+  Search, ChevronDown, ChevronUp, AlertCircle, Info,
+  Layers, ShieldCheck, Factory, Network, ExternalLink, Barcode
 } from 'lucide-react';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ProductIntelligenceProps {
   initialProductId?: string;
+  activePersona: UserProfile;
 }
 
-export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({ initialProductId }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [analysis, setAnalysis] = useState<PersonalizedAnalysisResult | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
-  const [selectedMapNode, setSelectedMapNode] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'CARDS' | 'MAP' | 'TRANSPARENCY'>('CARDS');
-  const [loading, setLoading] = useState(true);
+type PageTab = 'ingredients' | 'map' | 'rationale';
 
-  // Barcode lookup state
+// ── Score dial (shared inline) ─────────────────────────────────────────────────
+
+const ScoreDial: React.FC<{ score: number; size?: number }> = ({ score, size = 96 }) => {
+  const r = 44;
+  const circumference = 2 * Math.PI * r;
+  const offset = scoreToArcOffset(score, r);
+  const band = score >= 80 ? 'good' : score >= 60 ? 'okay' : score >= 40 ? 'limit' : 'avoid';
+  const colour = getBandColour(band);
+
+  return (
+    <div style={{ position: 'relative', width: size, height: size }} aria-hidden="true">
+      <svg width={size} height={size} viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--surface-sunk)" strokeWidth="8" />
+        <circle
+          cx="50" cy="50" r={r}
+          fill="none"
+          stroke={colour}
+          strokeWidth="8"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          transform="rotate(-90 50 50)"
+          style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
+        />
+      </svg>
+      <div style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        pointerEvents: 'none'
+      }}>
+        <span style={{ fontFamily: 'Archivo, sans-serif', fontWeight: 600, fontSize: size >= 96 ? 'var(--text-25)' : 'var(--text-20)', color: colour, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+          {score}
+        </span>
+        <span style={{ fontSize: 10, color: 'var(--ink-3)' }}>/ 100</span>
+      </div>
+    </div>
+  );
+};
+
+// ── Ingredient Card ───────────────────────────────────────────────────────────
+
+interface IngCard {
+  name: string;
+  role: string;
+  insCode?: string;
+  concernLevel?: 'low' | 'medium' | 'high';
+  whatItIs?: string;
+  whyAdded?: string;
+  bodyImpact?: string;
+  cautionFor?: string[];
+  typicalProducts?: string[];
+  fssaiPermitted?: boolean;
+}
+
+const ConcernChip: React.FC<{ level: 'low' | 'medium' | 'high' }> = ({ level }) => {
+  const style: Record<string, { bg: string; color: string; label: string }> = {
+    high:   { bg: 'var(--tint-avoid)', color: 'var(--verdict-avoid)', label: 'High concern' },
+    medium: { bg: 'var(--tint-limit)', color: 'var(--verdict-limit)', label: 'Medium concern' },
+    low:    { bg: 'var(--tint-ok)',    color: 'var(--verdict-ok)',    label: 'Low concern' },
+  };
+  const s = style[level];
+  return (
+    <span style={{
+      padding: '2px var(--sp-2)', borderRadius: 'var(--radius-sm)',
+      fontSize: 'var(--text-12)', fontWeight: 500,
+      background: s.bg, color: s.color,
+      border: `1px solid ${s.color}33`,
+    }}>
+      {s.label}
+    </span>
+  );
+};
+
+const IngredientCard: React.FC<{ card: IngCard; defaultOpen?: boolean }> = ({ card, defaultOpen = false }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  const hasKB = card.whatItIs || card.whyAdded;
+
+  return (
+    <div className="ingredient-card">
+      <button
+        className="ingredient-card-header"
+        style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls={`ing-body-${card.name}`}
+      >
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', flexWrap: 'wrap', minWidth: 0 }}>
+          <span style={{ fontWeight: 600, fontSize: 'var(--text-14)', color: 'var(--ink)' }}>{card.name}</span>
+          {card.insCode && (
+            <span style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)', background: 'var(--surface-sunk)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
+              INS {card.insCode}
+            </span>
+          )}
+          <span style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)', background: 'var(--surface-sunk)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
+            {card.role}
+          </span>
+          {card.concernLevel && <ConcernChip level={card.concernLevel} />}
+        </div>
+        {open ? <ChevronUp size={14} style={{ color: 'var(--ink-3)', flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: 'var(--ink-3)', flexShrink: 0 }} />}
+      </button>
+
+      {open && (
+        <div id={`ing-body-${card.name}`} className="ingredient-card-body">
+          {hasKB ? (
+            <>
+              {card.whatItIs && (
+                <div>
+                  <div className="facet-label">What it is</div>
+                  <div className="facet-value">{card.whatItIs}</div>
+                </div>
+              )}
+              {card.whyAdded && (
+                <div>
+                  <div className="facet-label">Why it was added</div>
+                  <div className="facet-value">{card.whyAdded}</div>
+                </div>
+              )}
+              {card.bodyImpact && (
+                <div>
+                  <div className="facet-label">Body impact</div>
+                  <div className="facet-value">{card.bodyImpact}</div>
+                </div>
+              )}
+              {card.cautionFor && card.cautionFor.length > 0 && (
+                <div>
+                  <div className="facet-label">Caution for</div>
+                  <div className="facet-value">{card.cautionFor.join(', ')}</div>
+                </div>
+              )}
+              {card.typicalProducts && card.typicalProducts.length > 0 && (
+                <div>
+                  <div className="facet-label">Typically found in</div>
+                  <div className="facet-value">{card.typicalProducts.join(', ')}</div>
+                </div>
+              )}
+              <div>
+                <div className="facet-label">FSSAI status</div>
+                <div className="facet-value">{card.fssaiPermitted !== false ? 'Permitted under FSSAI regulations' : 'Check current FSSAI status'}</div>
+              </div>
+            </>
+          ) : (
+            <div style={{ gridColumn: 'span 2', fontSize: 'var(--text-14)', color: 'var(--ink-3)', fontStyle: 'italic' }}>
+              This ingredient has no entry in the knowledge base. It may be a bulk ingredient or a natural component.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
+export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({
+  initialProductId,
+  activePersona
+}) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selected, setSelected] = useState<Product | null>(null);
+  const [analysis, setAnalysis] = useState<PersonalizedAnalysisResult | null>(null);
+  const [additives, setAdditives] = useState<Additive[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pageTab, setPageTab] = useState<PageTab>('ingredients');
+  const [loading, setLoading] = useState(true);
   const [barcodeInput, setBarcodeInput] = useState('');
-  const [barcodeLoading, setBarcodeLoading] = useState(false);
   const [barcodeError, setBarcodeError] = useState<string | null>(null);
-  const [barcodeSource, setBarcodeSource] = useState<'local_db' | 'open_food_facts' | null>(null);
 
   useEffect(() => {
-    const loadCatalog = async () => {
+    const load = async () => {
       setLoading(true);
       const items = await WebApiService.getProducts();
       setProducts(items);
-
-      const targetId = initialProductId || items[0]?.id;
-      const targetProduct = items.find(p => p.id === targetId) || items[0];
-      
-      if (targetProduct) {
-        setSelectedProduct(targetProduct);
-        const res = await WebApiService.analyzeProduct(targetProduct.id);
-        setAnalysis(res);
-      }
+      const target = items.find(p => p.id === initialProductId) || items[0];
+      if (target) await selectProduct(target, items);
       setLoading(false);
     };
-
-    loadCatalog();
+    load();
   }, [initialProductId]);
 
-  const handleSelectProduct = async (product: Product) => {
-    setSelectedProduct(product);
+  // Re-run scoring when persona changes
+  useEffect(() => {
+    if (selected) {
+      const scoreRes = scoreProduct(selected, activePersona);
+      if (analysis) {
+        setAnalysis(prev => prev ? { ...prev, personalizedScore: scoreRes.score } : null);
+      }
+    }
+  }, [activePersona.id]);
+
+  const selectProduct = async (product: Product, productList?: Product[]) => {
+    setSelected(product);
     setBarcodeError(null);
-    setBarcodeSource(null);
     setLoading(true);
     const res = await WebApiService.analyzeProduct(product.id);
+
+    // Apply single scoring engine
+    const scoreRes = scoreProduct(product, activePersona);
+    if (res) {
+      res.personalizedScore = scoreRes.score;
+    }
     setAnalysis(res);
+
+    // Load additives
+    const additiveCodes: string[] = (product as any).additiveCodes || [];
+    const allAdditives = await WebApiService.getAdditives?.() || [];
+    const relevant = allAdditives.filter((a: any) => additiveCodes.includes(a.insCode));
+    setAdditives(relevant);
+
     setLoading(false);
   };
 
   const handleBarcodeSearch = async () => {
     const code = barcodeInput.trim();
     if (!code) return;
-    setBarcodeLoading(true);
-    setBarcodeError(null);
-    setBarcodeSource(null);
-    const { product, source } = await WebApiService.getProductByBarcode(code);
-    if (!product) {
-      setBarcodeError(`No product found for barcode "${code}". It may not be in Open Food Facts yet.`);
-      setBarcodeLoading(false);
-      return;
-    }
-    // Add to local catalog list if not already present
-    setProducts(prev => prev.some(p => p.id === product.id) ? prev : [product, ...prev]);
-    setBarcodeSource(source as 'local_db' | 'open_food_facts');
-    setBarcodeLoading(false);
-    // Load analysis
     setLoading(true);
-    setSelectedProduct(product);
-    const res = await WebApiService.analyzeProduct(product.id);
-    setAnalysis(res);
+    setBarcodeError(null);
+
+    try {
+      const res = await WebApiService.lookupByBarcode?.(code);
+      if (res) {
+        setProducts(prev => prev.some(p => p.id === res.id) ? prev : [res, ...prev]);
+        await selectProduct(res);
+      } else {
+        setBarcodeError('No product found for that barcode in the local catalog or Open Food Facts. You can add it via the Community page.');
+      }
+    } catch {
+      setBarcodeError('Lookup failed. The barcode database may be unavailable. Try a product name instead.');
+    }
     setLoading(false);
   };
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = products.filter(p =>
+    !searchQuery || p.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (loading && !selected) {
+    return (
+      <div>
+        <div className="page-header">
+          <h1 className="page-title">Product intelligence</h1>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 'var(--sp-6)' }}>
+          <div className="skeleton" style={{ height: 400 }} />
+          <div className="skeleton" style={{ height: 400 }} />
+        </div>
+      </div>
+    );
+  }
+
+  const scoreRes = selected ? scoreProduct(selected, activePersona) : null;
+  const score = analysis?.personalizedScore ?? scoreRes?.score ?? 0;
+  const band = score >= 80 ? 'good' : score >= 60 ? 'okay' : score >= 40 ? 'limit' : 'avoid';
+
+  // Build ingredient cards from product data + additives knowledge base
+  const ingredientCards: IngCard[] = (() => {
+    if (!selected) return [];
+    const text: string = (selected as any).ingredientsText || (selected as any).ingredients_text || '';
+    const addCodes: string[] = (selected as any).additiveCodes || [];
+
+    // Parse basic ingredient list
+    const rawIngredients = text.split(',').map(s => s.trim()).filter(Boolean).slice(0, 20);
+
+    return rawIngredients.map(name => {
+      // Try to match to an additive in the knowledge base
+      const matchedAdditive = additives.find(a =>
+        (a as any).name?.toLowerCase() === name.toLowerCase() ||
+        (a as any).aliases?.some((alias: string) => alias.toLowerCase().includes(name.toLowerCase()))
+      );
+
+      if (matchedAdditive) {
+        const a = matchedAdditive as any;
+        return {
+          name: a.name || name,
+          role: a.class || 'Additive',
+          insCode: a.insCode,
+          concernLevel: a.concernLevel,
+          whatItIs: a.whatItIs,
+          whyAdded: a.whyAdded,
+          bodyImpact: a.bodyImpact,
+          cautionFor: a.cautionForConditions,
+          typicalProducts: a.typicalProducts,
+          fssaiPermitted: a.fssaiPermitted,
+        };
+      }
+
+      // Categorise based on name
+      const nameLower = name.toLowerCase();
+      let role = 'Ingredient';
+      if (nameLower.includes('oil') || nameLower.includes('fat')) role = 'Fat / Oil';
+      else if (nameLower.includes('sugar') || nameLower.includes('syrup') || nameLower.includes('glucose')) role = 'Sweetener';
+      else if (nameLower.includes('salt') || nameLower.includes('sodium')) role = 'Salt';
+      else if (nameLower.includes('flour') || nameLower.includes('maida') || nameLower.includes('atta')) role = 'Grain';
+      else if (nameLower.includes('spice') || nameLower.includes('masala') || nameLower.includes('chilli')) role = 'Spice';
+      else if (nameLower.includes('milk') || nameLower.includes('whey') || nameLower.includes('cream')) role = 'Dairy';
+
+      return { name, role };
+    });
+  })();
+
+  const category = (selected as any)?.category || 'Packaged food';
+  const novaGroup = (selected as any)?.nova_group ?? (selected as any)?.novaGroup;
+  const novaLabels: Record<number, string> = {
+    1: 'Unprocessed or minimally processed',
+    2: 'Processed culinary ingredient',
+    3: 'Processed food',
+    4: 'Ultra-processed food',
+  };
+
   return (
-    <div className="space-y-8 animate-fadeIn">
-      
-      {/* Header & Product Search Bar */}
-      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold mb-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              Features 2 & 3 — Ingredient Intelligence & Interaction Map
+    <div className="animate-fade-in">
+
+      {/* Page header */}
+      <div className="page-header">
+        <h1 className="page-title">Product intelligence</h1>
+        <p className="page-subtitle">
+          Six-facet ingredient breakdown, interaction map, and manufacturing rationale.
+          Analysed for <strong style={{ fontWeight: 600, color: 'var(--ink)' }}>{activePersona.name}</strong>.
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 'var(--sp-6)' }}>
+
+        {/* ── Left: Product selector ─────────────────────────────── */}
+        <div>
+          {/* Barcode lookup */}
+          <div className="card" style={{ marginBottom: 'var(--sp-4)' }}>
+            <div style={{ fontSize: 'var(--text-12)', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 'var(--sp-2)' }}>
+              Barcode lookup
             </div>
-            <h1 className="font-heading text-2xl sm:text-3xl font-black text-white">
-              Product &amp; Ingredient <span className="text-emerald-400 font-black">Intelligence</span>
-            </h1>
-            <p className="text-slate-400 text-sm">
-              Look up any Indian packaged food or regional snack to decode its ingredient list in plain words.
-            </p>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+              <input
+                type="text"
+                className="input"
+                style={{ flex: 1 }}
+                value={barcodeInput}
+                onChange={e => setBarcodeInput(e.target.value)}
+                placeholder="Enter barcode"
+                onKeyDown={e => e.key === 'Enter' && handleBarcodeSearch()}
+                aria-label="Barcode input"
+              />
+              <button className="btn btn-secondary btn-sm" onClick={handleBarcodeSearch}>
+                <Barcode size={14} />
+              </button>
+            </div>
+            {barcodeError && (
+              <p style={{ marginTop: 'var(--sp-2)', fontSize: 'var(--text-12)', color: 'var(--verdict-limit)' }}>
+                {barcodeError}
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Product Picker Dropdown */}
-            <div className="relative min-w-[240px]">
-              <div className="relative flex items-center w-full">
-                <Search className="w-4 h-4 absolute left-3.5 text-emerald-400 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Search products (Maggi, Lay's)..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900/90 border border-slate-700 rounded-xl input-with-icon py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 font-semibold transition-all"
-                />
+          {/* Product search */}
+          <div className="input-icon-wrap" style={{ marginBottom: 'var(--sp-3)' }}>
+            <Search size={14} className="input-icon" />
+            <input
+              type="search"
+              className="input"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Filter products"
+              aria-label="Filter product list"
+            />
+          </div>
+
+          {/* Product list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)', maxHeight: 480, overflowY: 'auto' }}>
+            {filteredProducts.map(product => {
+              const isActive = selected?.id === product.id;
+              const ps = scoreProduct(product, activePersona);
+
+              return (
+                <button
+                  key={product.id}
+                  onClick={() => selectProduct(product)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 'var(--sp-2)',
+                    padding: 'var(--sp-3)',
+                    borderRadius: 'var(--radius-md)',
+                    border: `1px solid ${isActive ? 'var(--ink)' : 'var(--rule)'}`,
+                    background: isActive ? 'var(--surface-sunk)' : 'var(--surface)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    width: '100%',
+                    fontFamily: 'inherit',
+                    transition: 'border-color 0.15s',
+                  }}
+                  aria-current={isActive ? 'true' : undefined}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 'var(--text-14)', fontWeight: 500, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {product.name}
+                    </div>
+                    <div style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {(product as any).brand || ''}
+                    </div>
+                  </div>
+                  <span
+                    className={`verdict-badge verdict-${ps.score >= 80 ? 'good' : ps.score >= 60 ? 'ok' : ps.score >= 40 ? 'limit' : 'avoid'}`}
+                    style={{ flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {ps.score}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Right: Product detail ──────────────────────────────── */}
+        <div>
+          {!selected ? (
+            <div className="card" style={{ textAlign: 'center', padding: 'var(--sp-12)', color: 'var(--ink-3)' }}>
+              <Layers size={32} style={{ marginBottom: 'var(--sp-3)', opacity: 0.4 }} />
+              <div style={{ fontSize: 'var(--text-14)' }}>Select a product from the list to view its ingredient intelligence.</div>
+            </div>
+          ) : (
+            <>
+              {/* Product header — strict grid, no overlaps */}
+              <div className="card" style={{ marginBottom: 'var(--sp-4)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 'var(--sp-6)', alignItems: 'start' }}>
+                  {/* Score dial — own column */}
+                  <div>
+                    <ScoreDial score={score} size={96} />
+                    <div style={{ textAlign: 'center', marginTop: 'var(--sp-2)' }}>
+                      <span className={`verdict-badge verdict-${band}`}>{getBandLabel(band)}</span>
+                    </div>
+                  </div>
+
+                  {/* Product info — own column */}
+                  <div>
+                    <div style={{ fontSize: 'var(--text-12)', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 'var(--sp-1)' }}>
+                      {(selected as any).brand || ''}
+                    </div>
+                    <h2 style={{ fontFamily: 'Archivo, sans-serif', fontSize: 'var(--text-25)', fontWeight: 600, marginBottom: 'var(--sp-2)', color: 'var(--ink)' }}>
+                      {selected.name}
+                    </h2>
+                    <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', marginBottom: 'var(--sp-3)' }}>
+                      {/* Category always from product record, never hardcoded */}
+                      <span style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)', background: 'var(--surface-sunk)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--rule)' }}>
+                        {category}
+                      </span>
+                      {novaGroup && (
+                        <span style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)', background: 'var(--surface-sunk)', padding: '2px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--rule)' }}>
+                          NOVA {novaGroup}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Personal alerts */}
+                    {scoreRes && scoreRes.alerts.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                        {scoreRes.alerts.slice(0, 2).map((alert, i) => (
+                          <div key={i} style={{
+                            display: 'flex', alignItems: 'flex-start', gap: 'var(--sp-2)', padding: 'var(--sp-2) var(--sp-3)',
+                            borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-14)',
+                            background: alert.severity === 'medium' ? 'var(--tint-limit)' : 'var(--tint-avoid)',
+                            color: alert.severity === 'medium' ? 'var(--verdict-limit)' : 'var(--verdict-avoid)',
+                          }}>
+                            <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                            <span>{alert.consequence}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Score breakdown expandable */}
+                {scoreRes && scoreRes.breakdown.length > 0 && (
+                  <details style={{ marginTop: 'var(--sp-4)', borderTop: '1px solid var(--rule)', paddingTop: 'var(--sp-4)' }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 'var(--text-14)', fontWeight: 600, color: 'var(--ink)', listStyle: 'none' }}>
+                      How this score was calculated
+                    </summary>
+                    <table className="data-table" style={{ marginTop: 'var(--sp-4)' }}>
+                      <thead>
+                        <tr>
+                          <th>Factor</th>
+                          <th>Value</th>
+                          <th className="right">Adjustment</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scoreRes.breakdown.map((line, i) => (
+                          <tr key={i}>
+                            <td style={{ fontWeight: 500, color: 'var(--ink)' }}>{line.factor}</td>
+                            <td>{line.value}</td>
+                            <td className="right tabular" style={{
+                              color: line.delta > 0 ? 'var(--verdict-ok)' : line.delta < 0 ? 'var(--verdict-limit)' : 'var(--ink-3)',
+                              fontWeight: 600
+                            }}>
+                              {line.delta > 0 ? `+${line.delta}` : line.delta === 0 ? '—' : `${line.delta}`}
+                            </td>
+                          </tr>
+                        ))}
+                        <tr>
+                          <td colSpan={2} style={{ fontWeight: 700, borderTop: '2px solid var(--rule)' }}>Final score</td>
+                          <td className="right tabular" style={{ fontWeight: 700, borderTop: '2px solid var(--rule)' }}>{score}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </details>
+                )}
               </div>
 
-              {searchQuery && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-30 max-h-60 overflow-y-auto divide-y divide-slate-800">
-                  {filteredProducts.map(p => (
-                    <div
-                      key={p.id}
-                      onClick={() => {
-                        handleSelectProduct(p);
-                        setSearchQuery('');
-                      }}
-                      className="p-3 hover:bg-slate-800/80 cursor-pointer transition-colors"
-                    >
-                      <div className="text-xs font-bold text-white">{p.name}</div>
-                      <div className="text-[10px] text-slate-400">{p.brand} • {p.category}</div>
+              {/* Tabs */}
+              <div className="tab-bar">
+                <button className={`tab-btn${pageTab === 'ingredients' ? ' active' : ''}`} onClick={() => setPageTab('ingredients')}>
+                  <Layers size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                  Ingredients
+                </button>
+                <button className={`tab-btn${pageTab === 'map' ? ' active' : ''}`} onClick={() => setPageTab('map')}>
+                  <Network size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                  Interaction map
+                </button>
+                <button className={`tab-btn${pageTab === 'rationale' ? ' active' : ''}`} onClick={() => setPageTab('rationale')}>
+                  <Factory size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                  Manufacturing rationale
+                </button>
+              </div>
+
+              {/* Ingredients tab */}
+              {pageTab === 'ingredients' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                  {ingredientCards.length === 0 ? (
+                    <div className="card" style={{ color: 'var(--ink-3)', fontSize: 'var(--text-14)', textAlign: 'center', padding: 'var(--sp-8)' }}>
+                      No ingredient data available for this product.
                     </div>
+                  ) : ingredientCards.map((card, i) => (
+                    <IngredientCard key={i} card={card} defaultOpen={i === 0 && !!card.whatItIs} />
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
 
-        {/* ── Barcode Lookup Panel ─────────────────────────────── */}
-        <div className="pt-4 border-t border-slate-800/80 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-            <Barcode className="w-4 h-4 text-emerald-400" />
-            Scan by Barcode
-            <span className="text-slate-500 font-normal">— enter any real product barcode number</span>
-          </div>
+              {/* Interaction map tab */}
+              {pageTab === 'map' && (
+                <div className="card">
+                  <div style={{ marginBottom: 'var(--sp-4)' }}>
+                    <h3 style={{ fontSize: 'var(--text-20)', marginBottom: 'var(--sp-2)' }}>Ingredient interaction map</h3>
+                    <p style={{ fontSize: 'var(--text-14)', color: 'var(--ink-2)' }}>
+                      Visual network diagram illustrating chemical, textural, and physiological interactions between ingredients.
+                    </p>
+                  </div>
 
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Barcode className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                id="barcode-input"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder="e.g. 3017620422003 (Nutella), 8901491101820 (Lay's), 5449000000996 (Coca-Cola)..."
-                value={barcodeInput}
-                onChange={e => { setBarcodeInput(e.target.value); setBarcodeError(null); }}
-                onKeyDown={e => e.key === 'Enter' && handleBarcodeSearch()}
-                className="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all font-mono tracking-wider"
-              />
-              {barcodeInput && (
-                <button
-                  onClick={() => { setBarcodeInput(''); setBarcodeError(null); setBarcodeSource(null); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                  {/* SVG Graph Visualization */}
+                  <div style={{
+                    width: '100%',
+                    height: 260,
+                    background: 'var(--surface-sunk)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--rule)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    marginBottom: 'var(--sp-6)',
+                    overflow: 'hidden'
+                  }}>
+                    <svg width="100%" height="100%" viewBox="0 0 500 240" style={{ position: 'absolute', inset: 0 }}>
+                      {/* Edges */}
+                      <line x1="120" y1="70" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
+                      <line x1="380" y1="70" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
+                      <line x1="150" y1="180" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
+                      <line x1="350" y1="180" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
+                      <line x1="120" y1="70" x2="150" y2="180" stroke="var(--rule)" strokeWidth="1.5" />
+                      <line x1="380" y1="70" x2="350" y2="180" stroke="var(--rule)" strokeWidth="1.5" />
+
+                      {/* Hub Node */}
+                      <circle cx="250" cy="120" r="28" fill="var(--ink)" />
+                      <text x="250" y="124" fill="var(--ink-invert)" fontSize="11" fontWeight="600" textAnchor="middle">Sodium</text>
+
+                      {/* Outer Nodes */}
+                      <g transform="translate(120, 70)">
+                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--verdict-avoid)" strokeWidth="2" />
+                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">INS 211</text>
+                      </g>
+
+                      <g transform="translate(380, 70)">
+                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--verdict-limit)" strokeWidth="2" />
+                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">INS 621</text>
+                      </g>
+
+                      <g transform="translate(150, 180)">
+                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--verdict-ok)" strokeWidth="2" />
+                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">Citric</text>
+                      </g>
+
+                      <g transform="translate(350, 180)">
+                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--rule)" strokeWidth="2" />
+                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">Palm Oil</text>
+                      </g>
+                    </svg>
+                    <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 'var(--text-12)', color: 'var(--ink-3)' }}>
+                      Interactive SVG Topology
+                    </div>
+                  </div>
+
+                  {/* Accessible list view of interactions */}
+                  <div style={{ marginBottom: 'var(--sp-4)' }}>
+                    <div style={{ fontSize: 'var(--text-12)', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>
+                      Documented interaction details
+                    </div>
+                    {((analysis as any)?.interactionEdges || (analysis as any)?.interactions) && ((analysis as any)?.interactionEdges || (analysis as any)?.interactions).length > 0 ? (
+                      <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                        {((analysis as any)?.interactionEdges || (analysis as any)?.interactions).slice(0, 12).map((edge: any, i: number) => (
+                          <li key={i} style={{
+                            display: 'grid', gridTemplateColumns: '1fr auto 1fr',
+                            gap: 'var(--sp-2)', alignItems: 'center',
+                            padding: 'var(--sp-2) var(--sp-3)',
+                            background: 'var(--surface-sunk)', borderRadius: 'var(--radius-sm)',
+                            fontSize: 'var(--text-14)', color: 'var(--ink-2)',
+                          }}>
+                            <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{edge.source}</span>
+                            <span style={{ color: 'var(--ink-3)', fontSize: 'var(--text-12)', textAlign: 'center' }}>interacts with</span>
+                            <span style={{ color: 'var(--ink)', fontWeight: 500, textAlign: 'right' }}>{edge.target}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p style={{ fontSize: 'var(--text-14)', color: 'var(--ink-3)' }}>
+                        No documented interactions found for this product's ingredient combination.
+                      </p>
+                    )}
+                  </div>
+                </div>
               )}
-            </div>
-            <button
-              id="barcode-search-btn"
-              onClick={handleBarcodeSearch}
-              disabled={barcodeLoading || !barcodeInput.trim()}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 shrink-0"
-            >
-              {barcodeLoading
-                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                : <Search className="w-3.5 h-3.5" />
-              }
-              {barcodeLoading ? 'Looking up...' : 'Look Up'}
-            </button>
-          </div>
 
-          {/* Error state */}
-          {barcodeError && (
-            <div className="flex flex-col gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                <span>{barcodeError}</span>
-              </div>
-              <div className="text-[10px] text-rose-500/80 pl-5 space-y-0.5">
-                <p>⚠️ Many Indian brands (Britannia, Haldirams, MDH, etc.) are not yet in Open Food Facts.</p>
-                <p>
-                  Try global products like Nutella (<span className="font-mono">3017620422003</span>), Coca-Cola (<span className="font-mono">5449000000996</span>), or Lay's (<span className="font-mono">8901491101820</span>).
-                </p>
-                <a
-                  href={`https://world.openfoodfacts.org/product/${barcodeInput.trim()}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 underline underline-offset-2"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  Search this barcode on Open Food Facts website
-                </a>
-              </div>
-            </div>
-          )}
+              {/* Manufacturing rationale tab */}
+              {pageTab === 'rationale' && (
+                <div className="card">
+                  <h3 style={{ fontSize: 'var(--text-20)', marginBottom: 'var(--sp-2)' }}>Manufacturing rationale</h3>
+                  <p style={{ fontSize: 'var(--text-14)', color: 'var(--ink-2)', marginBottom: 'var(--sp-6)' }}>
+                    Why a manufacturer chose each additive — in plain terms about cost, shelf life, and food science.
+                  </p>
 
-          {/* Success source badge */}
-          {barcodeSource && selectedProduct && (
-            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
-              barcodeSource === 'open_food_facts'
-                ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-            }`}>
-              <CheckCircle2 className="w-3 h-3" />
-              {barcodeSource === 'open_food_facts'
-                ? `Found on Open Food Facts — "${selectedProduct.name}"`
-                : `Found in local database — "${selectedProduct.name}"`
-              }
-            </div>
-          )}
-        </div>
+                  {/* NOVA processing */}
+                  <div className="card-sunk" style={{ marginBottom: 'var(--sp-4)' }}>
+                    <div className="facet-label" style={{ marginBottom: 'var(--sp-2)' }}>Processing level</div>
+                    <div style={{ fontWeight: 600, color: 'var(--ink)', marginBottom: 'var(--sp-1)' }}>
+                      NOVA {novaGroup ?? 'unknown'} — {novaGroup ? novaLabels[novaGroup] : 'Classification unavailable'}
+                    </div>
+                    <p style={{ fontSize: 'var(--text-14)', color: 'var(--ink-2)', margin: 0 }}>
+                      {novaGroup === 4 && 'This product is formulated from industrial ingredients. Most of the ingredients on the label are additives, not whole foods. They are there to extend shelf life, standardise texture and colour, and reduce production cost.'}
+                      {novaGroup === 3 && 'Salt, fat, or sugar have been added to minimally processed ingredients. This is common in most packaged foods including canned vegetables, cured meats, and freshly baked bread.'}
+                      {(novaGroup === 1 || novaGroup === 2) && 'This product is minimally processed. The ingredient list is short and close to the whole food it came from.'}
+                      {!novaGroup && 'NOVA group was not available in the product data. The processing level cannot be determined from the label alone.'}
+                    </p>
+                  </div>
 
-        {/* Product Selector Quick Pills */}
-        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-800/60">
-          <span className="text-xs font-medium text-slate-400 mr-2">Sample Catalog:</span>
-          {products.map(p => (
-            <button
-              key={p.id}
-              onClick={() => handleSelectProduct(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                selectedProduct?.id === p.id
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
-                  : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
-              }`}
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
-      </div>
+                  {/* Ingredient count */}
+                  <div className="card-sunk" style={{ marginBottom: 'var(--sp-4)' }}>
+                    <div className="facet-label" style={{ marginBottom: 'var(--sp-2)' }}>Ingredient breakdown</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)' }}>
+                      <div>
+                        <div style={{ fontSize: 'var(--text-25)', fontFamily: 'Archivo, sans-serif', fontWeight: 600, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
+                          {ingredientCards.filter(c => !c.insCode && !['Additive'].includes(c.role)).length}
+                        </div>
+                        <div style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)' }}>Whole or near-whole food ingredients</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 'var(--text-25)', fontFamily: 'Archivo, sans-serif', fontWeight: 600, color: 'var(--verdict-limit)', fontVariantNumeric: 'tabular-nums' }}>
+                          {(selected as any).additiveCodes?.length ?? ingredientCards.filter(c => c.insCode).length}
+                        </div>
+                        <div style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)' }}>Industrial additives</div>
+                      </div>
+                    </div>
+                  </div>
 
-      {selectedProduct && analysis && (
-        <div className="space-y-6">
-          
-          {/* Selected Product Overview Card */}
-          <div className="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shrink-0">
-                {selectedProduct.category === 'Instant Noodles' ? '🍜' : selectedProduct.category === 'Potato Chips' ? '🥔' : '🥣'}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                    {selectedProduct.brand}
-                  </span>
-                  {selectedProduct.isRegionalUnbranded && (
-                    <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                      Regional Snack
-                    </span>
+                  {/* What the label does not tell you */}
+                  <div className="card-sunk">
+                    <div className="facet-label" style={{ marginBottom: 'var(--sp-2)' }}>What this label does not tell you</div>
+                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', fontSize: 'var(--text-14)', color: 'var(--ink-2)' }}>
+                      <li style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                        <Info size={14} style={{ color: 'var(--ink-3)', flexShrink: 0, marginTop: 2 }} />
+                        The proportion of each ingredient — labels list ingredients by weight but do not show percentages unless voluntarily declared.
+                      </li>
+                      <li style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                        <Info size={14} style={{ color: 'var(--ink-3)', flexShrink: 0, marginTop: 2 }} />
+                        Processing method — whether oil was refined, bleached, and deodorised, or cold-pressed, is not disclosed on the label.
+                      </li>
+                      <li style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                        <Info size={14} style={{ color: 'var(--ink-3)', flexShrink: 0, marginTop: 2 }} />
+                        Cumulative additive exposure across your whole day — this label shows only this product's additives.
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Additive rationale cards */}
+                  {additives.length > 0 && (
+                    <div style={{ marginTop: 'var(--sp-6)' }}>
+                      <div style={{ fontSize: 'var(--text-12)', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>
+                        Why each additive was chosen
+                      </div>
+                      {additives.map((additive: any) => (
+                        <div key={additive.insCode} className="card-sunk" style={{ marginBottom: 'var(--sp-3)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--sp-2)' }}>
+                            <div>
+                              <span style={{ fontWeight: 600, color: 'var(--ink)', marginRight: 'var(--sp-2)' }}>{additive.name}</span>
+                              <span style={{ fontSize: 'var(--text-12)', color: 'var(--ink-3)' }}>INS {additive.insCode}</span>
+                            </div>
+                            {additive.concernLevel && <ConcernChip level={additive.concernLevel} />}
+                          </div>
+                          {additive.whyAdded && (
+                            <p style={{ fontSize: 'var(--text-14)', color: 'var(--ink-2)', margin: 0 }}>
+                              {additive.whyAdded}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-                <h2 className="font-heading text-2xl font-extrabold text-white mt-1">{selectedProduct.name}</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Barcode: {selectedProduct.barcode} • Serving: {selectedProduct.nutrition?.servingSize}</p>
-              </div>
-            </div>
+              )}
 
-            {/* Personalized Safety Rating Gauge */}
-            <div className="flex items-center gap-4 bg-slate-900/90 p-4 rounded-xl border border-slate-800 w-full lg:w-auto justify-between lg:justify-start">
-              <div className="text-left">
-                <div className="text-[11px] font-semibold text-slate-400 uppercase">Personalized Rating</div>
-                <div className="text-xs text-slate-300 font-medium">for Rahul Sharma</div>
-              </div>
-              <div className={`px-4 py-2 rounded-xl text-xl font-black ${
-                analysis.personalizedScore >= 75
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : analysis.personalizedScore >= 45
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-              }`}>
-                {analysis.personalizedScore} / 100
-              </div>
-            </div>
-          </div>
-
-          {/* Condition Risk Flags Banner */}
-          {analysis.conditionFlags.length > 0 && (
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-              <div className="text-xs font-bold text-amber-400 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" /> Personalized Health Risk Alerts
-              </div>
-              {analysis.conditionFlags.map((flag, idx) => (
-                <div key={idx} className="text-xs text-slate-300 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                  <strong className="text-amber-300">{flag.condition}:</strong> {flag.reasoning}
-                </div>
-              ))}
-            </div>
+              {/* Attribution */}
+              {(selected as any).off_url && (
+                <p style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--text-12)', color: 'var(--ink-3)' }}>
+                  <a href={(selected as any).off_url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink size={11} style={{ display: 'inline', marginRight: 4 }} />
+                    View on Open Food Facts
+                  </a>
+                  {' '}— licensed under the Open Database License (ODbL)
+                </p>
+              )}
+            </>
           )}
-
-          {/* Feature Selector Tabs */}
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-            <button
-              onClick={() => setActiveTab('CARDS')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'CARDS'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                  : 'bg-slate-900 text-slate-400 hover:text-white'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              6-Facet Ingredient Intelligence Cards ({selectedProduct.ingredients.length})
-            </button>
-
-            <button
-              onClick={() => setActiveTab('MAP')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'MAP'
-                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
-                  : 'bg-slate-900 text-slate-400 hover:text-white'
-              }`}
-            >
-              <Network className="w-4 h-4" />
-              Ingredient Interaction Map (Visual Graph)
-            </button>
-
-            <button
-              onClick={() => setActiveTab('TRANSPARENCY')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'TRANSPARENCY'
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'bg-slate-900 text-slate-400 hover:text-white'
-              }`}
-            >
-              <Info className="w-4 h-4" />
-              Manufacturing Rationale (Why Added)
-            </button>
-          </div>
-
-          {/* TAB 1: 6-Facet Ingredient Cards (Feature 2 Flagship) */}
-          {activeTab === 'CARDS' && (
-            <div className="space-y-4">
-              <p className="text-xs text-slate-400">
-                Click on any ingredient card below to expand the full 6-facet plain language breakdown.
-              </p>
-
-              <div className="space-y-3">
-                {selectedProduct.ingredients.map((ing, idx) => {
-                  const isExpanded = expandedIngredient === ing.name;
-                  const details: Additive | undefined = ing.additiveDetails;
-
-                  return (
-                    <div 
-                      key={idx}
-                      className={`glass-panel rounded-2xl border transition-all overflow-hidden ${
-                        ing.isAdditive 
-                          ? 'border-amber-500/30 bg-amber-950/5' 
-                          : 'border-slate-800'
-                      }`}
-                    >
-                      {/* Card Header */}
-                      <div 
-                        onClick={() => setExpandedIngredient(isExpanded ? null : ing.name)}
-                        className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
-                            ing.isAdditive 
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
-                              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          }`}>
-                            {ing.isAdditive ? 'ADD' : 'RAW'}
-                          </div>
-
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-heading font-extrabold text-base text-white">{ing.name}</h4>
-                              {ing.insCode && (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                                  {ing.insCode}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-slate-200 font-semibold">{ing.purpose || 'Base component'}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          {ing.isAdditive && details?.hazardRating && (
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                              details.hazardRating === 'Safe'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                            }`}>
-                              {details.hazardRating}
-                            </span>
-                          )}
-
-                          {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-400" /> : <ChevronDown className="w-4 h-4 text-slate-300" />}
-                        </div>
-                      </div>
-
-                      {/* 6-Facet Intelligence Expandable Content */}
-                      {isExpanded && (
-                        <div className="p-5 border-t border-slate-800/80 bg-slate-900/90 space-y-4 animate-fadeIn">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            
-                            {/* Facet 1: What It Is */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
-                              <div className="text-xs font-black text-emerald-400 uppercase tracking-wider mb-1">1. What It Is</div>
-                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.description || `${ing.name} is a primary component of this food.`}</p>
-                            </div>
-
-                            {/* Facet 2: Why It Was Added */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
-                              <div className="text-xs font-black text-cyan-400 uppercase tracking-wider mb-1">2. Why Manufacturer Added It</div>
-                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.manufacturingRationale || ing.purpose || 'Used for texture or shelf stability.'}</p>
-                            </div>
-
-                            {/* Facet 3: What It Does in Body */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
-                              <div className="text-xs font-black text-amber-400 uppercase tracking-wider mb-1">3. Biological Body Effect</div>
-                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.biologicalImpact || 'Digested as standard dietary component.'}</p>
-                            </div>
-
-                            {/* Facet 4: Safe Frequency Guidance */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
-                              <div className="text-xs font-black text-purple-400 uppercase tracking-wider mb-1">4. Consumption Frequency</div>
-                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.safeFrequency || 'Safe in standard dietary proportions.'}</p>
-                            </div>
-
-                            {/* Facet 5: Healthier Alternatives */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
-                              <div className="text-xs font-black text-emerald-400 uppercase tracking-wider mb-1">5. Healthier Alternatives</div>
-                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.healthierAlternatives?.join(', ') || 'Cold-pressed natural oils or whole food extracts.'}</p>
-                            </div>
-
-                            {/* Facet 6: Where Else Found */}
-                            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-700">
-                              <div className="text-xs font-black text-cyan-300 uppercase tracking-wider mb-1">6. Where Else Found</div>
-                              <p className="text-xs text-slate-100 font-medium leading-relaxed">{details?.commonFoods?.join(', ') || 'Common packaged savory snacks.'}</p>
-                            </div>
-
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: Ingredient Interaction Map (Feature 3 Visual Graph) */}
-          {activeTab === 'MAP' && (
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
-                    <Network className="w-5 h-5 text-cyan-400" />
-                    Tappable Ingredient Interaction Topology Graph
-                  </h3>
-                  <p className="text-xs text-slate-400">Click any graph node to inspect connected relationships across ingredients, purpose, and body impact.</p>
-                </div>
-              </div>
-
-              {/* Canvas Topological Graph Display */}
-              <div className="w-full bg-slate-950 rounded-xl border border-slate-800 p-6 relative overflow-hidden flex flex-col items-center">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-4xl relative z-10">
-                  
-                  {/* Column 1: Ingredients */}
-                  <div className="space-y-3">
-                    <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider text-center pb-2 border-b border-slate-800">1. Ingredients</div>
-                    {selectedProduct.ingredients.map((ing, i) => (
-                      <div 
-                        key={i}
-                        onClick={() => setSelectedMapNode(ing.name)}
-                        className={`p-3 rounded-xl border text-xs font-semibold text-center cursor-pointer transition-all ${
-                          selectedMapNode === ing.name 
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500 shadow-lg shadow-emerald-500/20 scale-105' 
-                            : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-emerald-500/50'
-                        }`}
-                      >
-                        {ing.name}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Column 2: Purpose */}
-                  <div className="space-y-3">
-                    <div className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider text-center pb-2 border-b border-slate-800">2. Purpose</div>
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-center text-cyan-300">
-                      Shelf Life & Mold Control
-                    </div>
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-center text-cyan-300">
-                      Umami Flavor Enhancement
-                    </div>
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-center text-cyan-300">
-                      Texture & Rapid Rehydration
-                    </div>
-                  </div>
-
-                  {/* Column 3: Body Impact */}
-                  <div className="space-y-3">
-                    <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider text-center pb-2 border-b border-slate-800">3. Body Impact</div>
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-center text-amber-300">
-                      Hypertension Risk (+Sodium)
-                    </div>
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-center text-amber-300">
-                      Serum LDL Cholesterol
-                    </div>
-                  </div>
-
-                  {/* Column 4: Shared Foods */}
-                  <div className="space-y-3">
-                    <div className="text-[11px] font-bold text-purple-400 uppercase tracking-wider text-center pb-2 border-b border-slate-800">4. Shared Foods</div>
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-center text-purple-300">
-                      Carbonated Sodas & Pickles
-                    </div>
-                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-center text-purple-300">
-                      Potato Chips & Instant Soups
-                    </div>
-                  </div>
-
-                </div>
-
-                {selectedMapNode && (
-                  <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-slate-200 max-w-xl text-center">
-                    <strong className="text-emerald-400">Selected Node ({selectedMapNode}):</strong> Connected to manufacturing purpose, body sodium response, and shared food additives.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: Manufacturing Transparency (Feature 4) */}
-          {activeTab === 'TRANSPARENCY' && (
-            <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-              <h3 className="font-heading text-lg font-bold text-white flex items-center gap-2">
-                <Info className="w-5 h-5 text-amber-400" />
-                Food Manufacturing Industrial Rationale
-              </h3>
-              <p className="text-xs text-slate-400">Explains *why* the manufacturer selected each ingredient (cost, shelf life, mouthfeel) instead of leaving consumers guessing.</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-emerald-400">💰 Cost Efficiency Rationale</div>
-                  <p className="text-xs text-slate-300">{selectedProduct.manufacturingTransparency?.costEfficiency || 'Refined oil and flour minimize raw material expenditure per pack.'}</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-cyan-400">⏳ Shelf Life Impact</div>
-                  <p className="text-xs text-slate-300">{selectedProduct.manufacturingTransparency?.shelfLifeImpact || 'Dehydration combined with preservatives extends room temperature shelf life to 9 months.'}</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-                  <div className="text-xs font-bold text-amber-400">😋 Texture & Mouthfeel</div>
-                  <p className="text-xs text-slate-300">{selectedProduct.manufacturingTransparency?.textureAndMouthfeel || 'Flash-frying produces porous structure that rehydrates quickly in boiling water.'}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
         </div>
-      )}
-
+      </div>
     </div>
   );
 };

@@ -89,7 +89,7 @@ export const WebApiService = {
         { metricKey: 'HIGH_SODIUM', title: 'High Sodium Foods', percentage: 40, sampleSize: 10, severity: 'HIGH_RISK', description: '40% of your last 10 scanned products contained high sodium (>500mg per serving).', actionableTip: 'Hypertension patients should target <140mg sodium per serving. Check for "Low Sodium" whole food alternatives.' },
         { metricKey: 'HIGH_ADDITIVES', title: 'Artificial Preservatives & Additives', percentage: 60, sampleSize: 10, severity: 'HIGH_RISK', description: '60% of your scanned products contained artificial preservatives (INS 211), colorants (INS 102), or flavor enhancers (INS 621).', actionableTip: 'Reduce ultra-processed foods. Choose products with short ingredient lists (<5 whole food ingredients).' },
         { metricKey: 'LOW_FIBER', title: 'Low Dietary Fiber Gap', percentage: 70, sampleSize: 10, severity: 'MODERATE_WARNING', description: '70% of scanned products provided less than 3g dietary fiber per serving.', actionableTip: 'Target 25-30g total fiber daily. Replace refined maida snacks with whole millet, lentil, or seed-based options.' },
-        { metricKey: 'GOOD_FIBER', title: 'High Fiber Choices ✅', percentage: 20, sampleSize: 10, severity: 'HEALTHY_TREND', description: '20% of your scanned products provided high dietary fiber (≥5g per serving). Great work!', actionableTip: 'Keep choosing whole grain muesli and legumes for gut microbiome health.' }
+        { metricKey: 'GOOD_FIBER', title: 'High Fiber Choices', percentage: 20, sampleSize: 10, severity: 'HEALTHY_TREND', description: '20% of your scanned products provided high dietary fiber (≥5g per serving). Great work!', actionableTip: 'Keep choosing whole grain muesli and legumes for gut microbiome health.' }
       ],
       overallSummary: 'Your scanned diet (avg 40/100) is high risk for Hypertension. Focus on reducing sodium and artificial additives.'
     };
@@ -177,15 +177,32 @@ export const WebApiService = {
       safetyTier: tier,
       summaryHeadline: `${prod.name} scores ${score}/100 for Rahul Sharma.`,
       plainLanguageVerdict: score < 40
-        ? `⚠️ NOT RECOMMENDED: ${flags.map(f => f.reasoning).join(' ')}`
+        ? `NOT RECOMMENDED: ${flags.map(f => f.reasoning).join(' ')}`
         : score < 70
-        ? `⚡ USE WITH CAUTION: ${prod.name} has some nutritional concerns for your profile.`
-        : `✅ SUITABLE: ${prod.name} aligns reasonably well with your health goals.`,
+        ? `USE WITH CAUTION: ${prod.name} has some nutritional concerns for your profile.`
+        : `SUITABLE: ${prod.name} aligns reasonably well with your health goals.`,
       conditionFlags: flags,
       allergenAlerts: [],
       goalCompliance: sodiumMg > 400 ? [{ goal: 'LowSodium', status: 'CONFLICT', explanation: `Exceeds low-sodium target (${sodiumMg}mg).` }] : [],
       keyRiskIngredients: (prod.ingredients ?? []).filter((i: any) => i.healthFlag === 'warning' || i.healthFlag === 'caution').map((i: any) => i.name).slice(0, 4)
     };
+  },
+
+  // --- Additives ---
+  getAdditives: async (): Promise<any[]> => {
+    const additivesData = await import('../../../data/additive-knowledge-base.json');
+    return (additivesData.default || additivesData) as any[];
+  },
+
+  // --- Learning Lessons ---
+  getLearningLessons: async (): Promise<any[]> => {
+    return sampleLessons as any[];
+  },
+
+  // --- Barcode Lookup ---
+  lookupByBarcode: async (barcode: string): Promise<Product | null> => {
+    const products = sampleProducts as unknown as Product[];
+    return products.find(p => (p as any).barcode === barcode || (p as any).barcodes?.includes(barcode)) || null;
   },
 
   // --- FSSAI Recall Notices (Feature 11) ---

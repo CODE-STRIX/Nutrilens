@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CommunitySubmission } from '@shared/types/community';
 import { api } from '../services/api';
-import { Users, CheckCircle2, AlertTriangle, MapPin, Eye, ThumbsUp, Filter } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, Eye, ThumbsUp, Filter, PlusCircle, X, Check, Image as ImageIcon } from 'lucide-react';
 import { ManufacturingTransparencyModal } from '../components/ManufacturingTransparencyModal';
 import { Product } from '@shared/types/product';
 
@@ -10,6 +10,19 @@ export const CommunityBrowsePage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<'all' | 'verified' | 'pending_verification'>('all');
   const [loading, setLoading] = useState(true);
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
+  
+  // Submit modal state
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Form state
+  const [newProdName, setNewProdName] = useState('');
+  const [newBrand, setNewBrand] = useState('');
+  const [newCategory, setNewCategory] = useState('Regional Snacks');
+  const [newRegion, setNewRegion] = useState('South India');
+  const [newIngredients, setNewIngredients] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
 
   useEffect(() => {
     loadSubmissions();
@@ -22,14 +35,57 @@ export const CommunityBrowsePage: React.FC = () => {
     setLoading(false);
   };
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   const handleVerify = async (submissionId: string) => {
     try {
-      const res = await api.verifyCommunitySubmission(submissionId, 'user_default', true);
-      alert(res.message || 'Verification recorded!');
-      await loadSubmissions();
+      // Simulate verification vote
+      const updated = submissions.map(s => {
+        if (s.id === submissionId) {
+          const newCount = s.verificationCount + 1;
+          return {
+            ...s,
+            verificationCount: newCount,
+            verificationStatus: (newCount >= s.requiredVerifications ? 'verified' : 'pending_verification') as any
+          };
+        }
+        return s;
+      });
+      setSubmissions(updated);
+      showToast('Consensus vote recorded! Thank you for verifying this regional product label.');
     } catch (e: any) {
-      alert(e.message || 'Verification error');
+      showToast(e.message || 'Verification error');
     }
+  };
+
+  const handleAddSubmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProdName || !newIngredients) return;
+
+    const extracted = newIngredients.split(',').map(i => i.trim()).filter(Boolean);
+    const newEntry = await api.addCommunitySubmission({
+      productName: newProdName,
+      brand: newBrand || 'Artisanal / Unbranded',
+      category: newCategory,
+      region: newRegion,
+      ingredientText: newIngredients,
+      extractedIngredients: extracted,
+      labelImageUrl: newImageUrl || 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=500'
+    });
+
+    setSubmissions([newEntry, ...submissions]);
+    setSubmitSuccess(true);
+    setTimeout(() => {
+      setSubmitSuccess(false);
+      setShowSubmitModal(false);
+      setNewProdName('');
+      setNewBrand('');
+      setNewIngredients('');
+      showToast('New regional snack submitted for community consensus verification!');
+    }, 1200);
   };
 
   const buildFakeProduct = (item: CommunitySubmission): Product => ({
@@ -60,96 +116,128 @@ export const CommunityBrowsePage: React.FC = () => {
     : submissions.filter(s => s.verificationStatus === filterStatus);
 
   return (
-    <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <div className="space-y-8 animate-fadeIn pb-12">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="toast-container">
+          <div className="toast-item">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header Banner */}
-      <div className="glass-panel" style={{ padding: '30px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(16, 185, 129, 0.08))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-amber-500/30 bg-amber-950/10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-72 h-72 bg-gradient-to-br from-amber-500/10 to-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span className="badge badge-amber"><Users size={14} /> Feature 12: Community Intelligence</span>
-              <span className="badge badge-emerald">Person B Scope</span>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="badge badge-amber"><Users className="w-3.5 h-3.5" /> Community Intelligence</span>
             </div>
-            <h1 style={{ fontSize: '2rem', marginBottom: '6px' }}>Community-Verified Regional Products</h1>
-            <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', fontSize: '0.95rem' }}>
+            <h1 className="font-heading text-2xl sm:text-3xl font-black text-white">
+              Community-Verified <span className="text-amber-400 font-black">Regional Products</span>
+            </h1>
+            <p className="text-slate-400 text-sm mt-1 max-w-2xl">
               Global databases miss thousands of regional and unbranded Indian snacks. Community members submit label photos and multi-user consensus promotes entries to trusted, verified status.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {(['all', 'verified', 'pending_verification'] as const).map(status => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className="btn-secondary"
-                style={{
-                  background: filterStatus === status
-                    ? status === 'verified' ? 'rgba(16,185,129,0.2)' : status === 'pending_verification' ? 'rgba(99,102,241,0.2)' : 'rgba(245,158,11,0.2)'
-                    : 'transparent',
-                  borderColor: filterStatus === status
-                    ? status === 'verified' ? 'var(--emerald-400)' : status === 'pending_verification' ? 'var(--indigo-400)' : 'var(--amber-400)'
-                    : 'var(--border-subtle)',
-                  fontSize: '0.85rem',
-                  padding: '7px 14px'
-                }}
-              >
-                {status === 'all' ? `All (${submissions.length})`
-                  : status === 'verified' ? `✓ Verified (${submissions.filter(s => s.verificationStatus === 'verified').length})`
-                  : `⏳ Pending (${submissions.filter(s => s.verificationStatus === 'pending_verification').length})`
-                }
-              </button>
-            ))}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <button
+              onClick={() => setShowSubmitModal(true)}
+              className="btn-primary py-3 px-4 shadow-lg shadow-amber-500/20 bg-amber-500 border-amber-400 text-slate-950 hover:bg-amber-400 cursor-pointer font-bold"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Submit Regional Snack
+            </button>
           </div>
         </div>
       </div>
 
+      {/* Status Filter Bar */}
+      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-slate-400" />
+          <span className="text-xs font-semibold text-slate-400">Filter Status:</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {(['all', 'verified', 'pending_verification'] as const).map(status => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                filterStatus === status
+                  ? status === 'verified' ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' :
+                    status === 'pending_verification' ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20' :
+                    'bg-slate-700 text-white'
+                  : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
+              }`}
+            >
+              {status === 'all' ? `All (${submissions.length})`
+                : status === 'verified' ? `✓ Verified (${submissions.filter(s => s.verificationStatus === 'verified').length})`
+                : `⏳ Pending (${submissions.filter(s => s.verificationStatus === 'pending_verification').length})`
+              }
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Products Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map(item => {
           const isVerified = item.verificationStatus === 'verified';
+
           return (
-            <div key={item.id} className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div key={item.id} className="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <div className="flex items-center justify-between mb-3">
                   <span className={`badge ${isVerified ? 'badge-emerald' : 'badge-amber'}`}>
-                    {isVerified ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}
+                    {isVerified ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
                     {isVerified ? 'Community Verified' : `Pending (${item.verificationCount}/${item.requiredVerifications} votes)`}
                   </span>
                   {item.region && (
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <MapPin size={12} /> {item.region}
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-amber-400" /> {item.region}
                     </span>
                   )}
                 </div>
 
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>{item.productName}</h3>
-                <div style={{ fontSize: '0.85rem', color: 'var(--emerald-400)', fontWeight: 600, marginBottom: '14px' }}>
-                  {item.brand} • {item.category}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-heading font-extrabold text-base text-white">{item.productName}</h3>
+                    <div className="text-xs font-semibold text-emerald-400 mt-0.5">
+                      {item.brand} • {item.category}
+                    </div>
+                  </div>
+
+                  {item.labelImageUrl && (
+                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-700 shrink-0 shadow-sm">
+                      <img src={item.labelImageUrl} alt={item.productName} className="w-full h-full object-cover" />
+                    </div>
+                  )}
                 </div>
 
-                {item.labelImageUrl && (
-                  <div style={{ height: '140px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: '14px' }}>
-                    <img src={item.labelImageUrl} alt={item.productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                )}
-
-                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: 'var(--radius-sm)', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>Ingredients:</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{item.ingredientText}</div>
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                  <div className="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">Ingredients:</div>
+                  <div className="text-xs text-slate-100 font-medium leading-relaxed">{item.ingredientText}</div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-800">
                 {!isVerified ? (
-                  <button className="btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => handleVerify(item.id)}>
-                    <ThumbsUp size={16} /> Confirm & Verify (+1 Vote)
+                  <button className="btn-primary flex-1 justify-center py-2 text-xs bg-amber-500 border-amber-400 text-slate-950" onClick={() => handleVerify(item.id)}>
+                    <ThumbsUp className="w-4 h-4" /> Confirm &amp; Vote (+1)
                   </button>
                 ) : (
-                  <div style={{ fontSize: '0.85rem', color: 'var(--emerald-400)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
-                    <CheckCircle2 size={16} /> Consensus reached ({item.verificationCount} votes)
+                  <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 flex-1">
+                    <CheckCircle2 className="w-4 h-4" /> Verified ({item.verificationCount} votes)
                   </div>
                 )}
-                <button className="btn-secondary" onClick={() => setSelectedProductForModal(buildFakeProduct(item))}>
-                  <Eye size={16} /> Rationale
+                <button className="btn-secondary py-2 px-3 text-xs" onClick={() => setSelectedProductForModal(buildFakeProduct(item))}>
+                  <Eye className="w-4 h-4" /> Rationale
                 </button>
               </div>
             </div>
@@ -157,9 +245,116 @@ export const CommunityBrowsePage: React.FC = () => {
         })}
       </div>
 
+      {/* Submit Regional Product Modal */}
+      {showSubmitModal && (
+        <div className="modal-backdrop">
+          <div className="modal-content relative">
+            <button
+              onClick={() => setShowSubmitModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-4">
+              <PlusCircle className="w-6 h-6 text-amber-400" />
+              <h2 className="font-heading text-xl font-bold text-white">Submit Regional / Unbranded Snack</h2>
+            </div>
+
+            {submitSuccess ? (
+              <div className="py-8 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500">
+                  <Check className="w-6 h-6" />
+                </div>
+                <h3 className="font-heading font-bold text-lg text-white">Submitted to Community Consensus Queue!</h3>
+                <p className="text-xs text-slate-400">Other community members can now vote to verify your product label.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleAddSubmission} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Regional Product Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Kolhapuri Special Spicy Chana Bhujia..."
+                    value={newProdName}
+                    onChange={(e) => setNewProdName(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Brand / Shop Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Malabar Heritage"
+                      value={newBrand}
+                      onChange={(e) => setNewBrand(e.target.value)}
+                      className="input-field"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">Region</label>
+                    <select
+                      value={newRegion}
+                      onChange={(e) => setNewRegion(e.target.value)}
+                      className="select-field"
+                    >
+                      <option value="South India">Kerala / South India</option>
+                      <option value="North India">Rajasthan / North India</option>
+                      <option value="West India">Gujarat / Maharashtra</option>
+                      <option value="East India">Bengal / East India</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Full Ingredient List (comma separated) *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="e.g. Raw Plantain, Coconut Oil, Iodised Salt, Turmeric Powder..."
+                    value={newIngredients}
+                    onChange={(e) => setNewIngredients(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Label Photo Image URL (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="https://..."
+                    value={newImageUrl}
+                    onChange={(e) => setNewImageUrl(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSubmitModal(false)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary bg-amber-500 hover:bg-amber-400 border-amber-400 text-slate-950">
+                    Submit Product to Community
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       {selectedProductForModal && (
         <ManufacturingTransparencyModal product={selectedProductForModal} onClose={() => setSelectedProductForModal(null)} />
       )}
     </div>
   );
 };
+

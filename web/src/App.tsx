@@ -125,8 +125,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/60 py-6 mt-12 text-center text-xs text-slate-400">
-        <p className="font-semibold">Nutri Lens — AI-Powered Food Label &amp; Ingredient Intelligence Platform</p>
-        <p className="mt-1 text-[11px] text-slate-500">Smart India Hackathon 2026 • Team CODESTRIX • Web App (4-Zone Task-Focused Layout)</p>
+        <p className="font-semibold">NutriLens — Food Safety &amp; Ingredient Intelligence Platform</p>
       </footer>
 
     </div>

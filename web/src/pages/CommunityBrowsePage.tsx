@@ -62,16 +62,15 @@ export const CommunityBrowsePage: React.FC = () => {
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '60px' }}>
       {/* Header Banner */}
-      <div className="glass-panel" style={{ padding: '30px', marginBottom: '24px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(16, 185, 129, 0.08))' }}>
+      <div className="glass-panel" style={{ padding: '30px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span className="badge badge-amber"><Users size={14} /> Feature 12: Community Intelligence</span>
-              <span className="badge badge-emerald">Person B Scope</span>
+              <span className="badge badge-emerald"><Users size={14} /> Community Intelligence</span>
             </div>
             <h1 style={{ fontSize: '2rem', marginBottom: '6px' }}>Community-Verified Regional Products</h1>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', fontSize: '0.95rem' }}>
-              Global databases miss thousands of regional and unbranded Indian snacks. Community members submit label photos and multi-user consensus promotes entries to trusted, verified status.
+              Browse regional products, user-submitted label photos, and verified ingredient data.
             </p>
           </div>
 

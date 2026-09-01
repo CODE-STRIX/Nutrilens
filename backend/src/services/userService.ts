@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { UserRegistrationDto, UserLoginDto, AuthResponse, UserProfile } from '../../../shared/types/user';
 import { UserStore, UserRecord } from '../models/userStore';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'nutri_lens_sih_2026_codestrix_secret_key_super_secure';
+const JWT_SECRET = process.env.JWT_SECRET || 'nutrilens_jwt_secret_key_default_secure';
 
 export const UserService = {
   register: async (dto: UserRegistrationDto): Promise<AuthResponse> => {

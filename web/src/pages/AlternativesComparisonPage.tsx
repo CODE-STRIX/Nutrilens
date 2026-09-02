@@ -49,11 +49,34 @@ export const AlternativesComparisonPage: React.FC<AlternativesComparisonPageProp
   const scoreB = prodB ? scoreProduct(prodB, activePersona) : null;
 
   // Extract ingredient text per product (ensures panels differ - Defect #3 fix)
-  const ingA = (prodA as any)?.ingredientsText || (prodA as any)?.ingredients_text || 'Whole wheat flour, Water, Salt';
-  const ingB = (prodB as any)?.ingredientsText || (prodB as any)?.ingredients_text || 'Rolled oats, Whole wheat flakes, Nuts, Honey';
+  const getIngText = (p: any) => {
+    if (!p) return '';
+    if (p.ingredientsText) return p.ingredientsText;
+    if (p.ingredients_text) return p.ingredients_text;
+    if (Array.isArray(p.ingredients)) {
+      return p.ingredients.map((i: any) => i.name).join(', ');
+    }
+    return '';
+  };
 
-  const nutA = (prodA as any)?.nutriments || {};
-  const nutB = (prodB as any)?.nutriments || {};
+  const ingA = getIngText(prodA) || 'Refined wheat flour, Palm oil, Salt, Seasoning';
+  const ingB = getIngText(prodB) || 'Potato, Palmolein oil, Salt, Spices';
+
+  const getNut = (p: any) => {
+    const nutriments = p?.nutriments || {};
+    const nutrition = p?.nutrition || {};
+    return {
+      sodium: nutriments.sodium_100g ?? nutriments.sodium ?? nutrition.sodiumMg ?? p?.sodiumMg ?? 0,
+      sugars: nutriments.sugars_100g ?? nutriments.sugars ?? nutrition.sugarGrams ?? p?.sugarGrams ?? 0,
+      satFat: nutriments['saturated-fat_100g'] ?? nutriments['saturated-fat'] ?? nutrition.saturatedFatGrams ?? p?.saturatedFatGrams ?? 0,
+      fiber: nutriments.fiber_100g ?? nutriments.fiber ?? nutrition.fiberGrams ?? p?.fiberGrams ?? 0,
+      serving: nutrition.servingSize || p?.servingSize || '100 g',
+      nova: p?.nova_group ?? p?.novaGroup ?? 4
+    };
+  };
+
+  const nutA = getNut(prodA);
+  const nutB = getNut(prodB);
 
   const rows = [
     {
@@ -80,45 +103,45 @@ export const AlternativesComparisonPage: React.FC<AlternativesComparisonPageProp
     },
     {
       label: 'Serving Size',
-      valA: (prodA as any)?.servingSizeG ? `${(prodA as any).servingSizeG} g` : '100 g',
-      valB: (prodB as any)?.servingSizeG ? `${(prodB as any).servingSizeG} g` : '100 g',
+      valA: nutA.serving,
+      valB: nutB.serving,
       unit: '',
       better: 'equal'
     },
     {
       label: 'Sodium',
-      valA: (prodA as any)?.sodiumMg ?? nutA.sodium_100g ?? 0,
-      valB: (prodB as any)?.sodiumMg ?? nutB.sodium_100g ?? 0,
+      valA: nutA.sodium,
+      valB: nutB.sodium,
       unit: 'mg',
-      better: ((prodA as any)?.sodiumMg ?? 0) < ((prodB as any)?.sodiumMg ?? 0) ? 'A' : 'B'
+      better: nutA.sodium < nutB.sodium ? 'A' : nutB.sodium < nutA.sodium ? 'B' : 'equal'
     },
     {
       label: 'Total Sugars',
-      valA: (prodA as any)?.sugarGrams ?? nutA.sugars_100g ?? 0,
-      valB: (prodB as any)?.sugarGrams ?? nutB.sugars_100g ?? 0,
+      valA: nutA.sugars,
+      valB: nutB.sugars,
       unit: 'g',
-      better: ((prodA as any)?.sugarGrams ?? 0) < ((prodB as any)?.sugarGrams ?? 0) ? 'A' : 'B'
+      better: nutA.sugars < nutB.sugars ? 'A' : nutB.sugars < nutA.sugars ? 'B' : 'equal'
     },
     {
       label: 'Saturated Fat',
-      valA: (prodA as any)?.saturatedFatGrams ?? nutA['saturated-fat_100g'] ?? 0,
-      valB: (prodB as any)?.saturatedFatGrams ?? nutB['saturated-fat_100g'] ?? 0,
+      valA: nutA.satFat,
+      valB: nutB.satFat,
       unit: 'g',
-      better: ((prodA as any)?.saturatedFatGrams ?? 0) < ((prodB as any)?.saturatedFatGrams ?? 0) ? 'A' : 'B'
+      better: nutA.satFat < nutB.satFat ? 'A' : nutB.satFat < nutA.satFat ? 'B' : 'equal'
     },
     {
       label: 'Dietary Fibre',
-      valA: (prodA as any)?.fiberGrams ?? nutA.fiber_100g ?? 0,
-      valB: (prodB as any)?.fiberGrams ?? nutB.fiber_100g ?? 0,
+      valA: nutA.fiber,
+      valB: nutB.fiber,
       unit: 'g',
-      better: ((prodA as any)?.fiberGrams ?? 0) > ((prodB as any)?.fiberGrams ?? 0) ? 'A' : 'B'
+      better: nutA.fiber > nutB.fiber ? 'A' : nutB.fiber > nutA.fiber ? 'B' : 'equal'
     },
     {
       label: 'NOVA Group',
-      valA: (prodA as any)?.nova_group ?? 4,
-      valB: (prodB as any)?.nova_group ?? 1,
+      valA: nutA.nova,
+      valB: nutB.nova,
       unit: '',
-      better: ((prodA as any)?.nova_group ?? 4) < ((prodB as any)?.nova_group ?? 4) ? 'A' : 'B'
+      better: 'equal'
     }
   ];
 

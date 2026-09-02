@@ -113,7 +113,7 @@ export const WebApiService = {
   },
 
   // --- Pattern Intelligence (Feature 7) ---
-  getPatternIntelligence: async (userId: string = 'usr-demo-rahul', lastN: number = 10): Promise<PatternIntelligenceReport> => {
+  getPatternIntelligence: async (userId: string = 'usr-demo-rahul', lastN: number = 10, persona?: UserProfile): Promise<PatternIntelligenceReport> => {
     try {
       const res = await fastFetch(`${API_BASE_URL}/dashboard/patterns?lastN=${lastN}`, {
         headers: { 'Authorization': `Bearer demo-token` }
@@ -123,16 +123,73 @@ export const WebApiService = {
       // Fallback
     }
 
+    const conditions = (persona?.healthConditions || ['Hypertension']) as string[];
+    const pName = persona?.name || 'Rahul Sharma';
+
+    const hasHyp = conditions.includes('Hypertension');
+    const hasDiab = conditions.includes('Type2Diabetes');
+    const hasChol = conditions.includes('HighCholesterol');
+    const hasGERD = conditions.includes('GERD');
+    const hasKidney = conditions.includes('KidneySupport');
+
+    let overallSummary = `Analysis for ${pName}: Your recent scanned diet shows key areas for nutritional optimization based on your active profile.`;
+
+    if (hasHyp) {
+      overallSummary = `Analysis for ${pName}: Your scanned diet is high risk for Hypertension due to elevated sodium density. Focus on reducing sodium and artificial additives.`;
+    } else if (hasDiab) {
+      overallSummary = `Analysis for ${pName}: Your scanned diet contains rapid-glycemic index foods and added sugars. Focus on low glycemic index whole grains and fiber.`;
+    } else if (hasChol) {
+      overallSummary = `Analysis for ${pName}: High saturated fat and palm oil presence detected in snack scans. Focus on unsaturated fats and fiber to lower LDL cholesterol.`;
+    } else if (hasGERD) {
+      overallSummary = `Analysis for ${pName}: Multiple scans contain acidic preservatives (INS 330) and spicy seasonings. Reduce acidity regulators to prevent reflux.`;
+    } else if (hasKidney) {
+      overallSummary = `Analysis for ${pName}: High phosphate additive burden detected in processed scans. Target zero phosphate additives (INS 338-452).`;
+    }
+
     return {
       userId,
-      analyzedScansCount: 10,
+      analyzedScansCount: lastN,
       insights: [
-        { metricKey: 'HIGH_SODIUM', title: 'High Sodium Foods', percentage: 40, sampleSize: 10, severity: 'HIGH_RISK', description: '40% of your last 10 scanned products contained high sodium (>500mg per serving).', actionableTip: 'Hypertension patients should target <140mg sodium per serving. Check for "Low Sodium" whole food alternatives.' },
-        { metricKey: 'HIGH_ADDITIVES', title: 'Artificial Preservatives & Additives', percentage: 60, sampleSize: 10, severity: 'HIGH_RISK', description: '60% of your scanned products contained artificial preservatives (INS 211), colorants (INS 102), or flavor enhancers (INS 621).', actionableTip: 'Reduce ultra-processed foods. Choose products with short ingredient lists (<5 whole food ingredients).' },
-        { metricKey: 'LOW_FIBER', title: 'Low Dietary Fiber Gap', percentage: 70, sampleSize: 10, severity: 'MODERATE_WARNING', description: '70% of scanned products provided less than 3g dietary fiber per serving.', actionableTip: 'Target 25-30g total fiber daily. Replace refined maida snacks with whole millet, lentil, or seed-based options.' },
-        { metricKey: 'GOOD_FIBER', title: 'High Fiber Choices', percentage: 20, sampleSize: 10, severity: 'HEALTHY_TREND', description: '20% of your scanned products provided high dietary fiber (≥5g per serving). Great work!', actionableTip: 'Keep choosing whole grain muesli and legumes for gut microbiome health.' }
+        {
+          metricKey: 'HIGH_SODIUM',
+          title: 'High Sodium Foods',
+          percentage: hasHyp ? 60 : 30,
+          sampleSize: lastN,
+          severity: hasHyp ? 'HIGH_RISK' : 'MODERATE_WARNING',
+          description: `${hasHyp ? '60%' : '30%'} of your last ${lastN} scanned products contained high sodium (>500mg per serving).`,
+          actionableTip: hasHyp
+            ? 'Hypertension active: target <140mg sodium per serving. Choose "Low Sodium" whole food alternatives.'
+            : 'Maintain sodium intake under 2000mg per day.'
+        },
+        {
+          metricKey: 'HIGH_ADDITIVES',
+          title: 'Artificial Preservatives & Additives',
+          percentage: hasGERD ? 70 : 50,
+          sampleSize: lastN,
+          severity: hasGERD ? 'HIGH_RISK' : 'MODERATE_WARNING',
+          description: `${hasGERD ? '70%' : '50%'} of your scanned products contained artificial preservatives (INS 211), colorants (INS 102), or acidity regulators.`,
+          actionableTip: 'Reduce ultra-processed foods. Choose products with short ingredient lists (<5 whole food ingredients).'
+        },
+        {
+          metricKey: 'LOW_FIBER',
+          title: 'Low Dietary Fiber Gap',
+          percentage: (hasDiab || hasChol) ? 80 : 60,
+          sampleSize: lastN,
+          severity: (hasDiab || hasChol) ? 'HIGH_RISK' : 'MODERATE_WARNING',
+          description: `${(hasDiab || hasChol) ? '80%' : '60%'} of scanned products provided less than 3g dietary fiber per serving.`,
+          actionableTip: 'Target 25-30g total fiber daily. Replace refined maida snacks with whole millet, lentil, or seed-based options.'
+        },
+        {
+          metricKey: 'GOOD_FIBER',
+          title: 'High Fiber Choices',
+          percentage: 20,
+          sampleSize: lastN,
+          severity: 'HEALTHY_TREND',
+          description: '20% of your scanned products provided high dietary fiber (≥5g per serving). Great work!',
+          actionableTip: 'Keep choosing whole grain muesli and legumes for gut microbiome health.'
+        }
       ],
-      overallSummary: 'Your scanned diet (avg 40/100) is high risk for Hypertension. Focus on reducing sodium and artificial additives.'
+      overallSummary
     };
   },
 

@@ -18,16 +18,23 @@ export const FoodPatternIntelligence: React.FC<FoodPatternIntelligenceProps> = (
   const [swapsPerWeek, setSwapsPerWeek] = useState(2);
   const [loading, setLoading] = useState(true);
 
-  // Load the SAME PatternReport object used by the dashboard
+  // Fingerprint to trigger re-fetch when persona health conditions or allergies change
+  const personaFingerprint = JSON.stringify({
+    id: activePersona.id,
+    conditions: (activePersona as any).healthConditions ?? [],
+    allergies: (activePersona as any).allergies ?? [],
+  });
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const r = await WebApiService.getPatternIntelligence(activePersona.id, windowSize);
+      const r = await WebApiService.getPatternIntelligence(activePersona.id, windowSize, activePersona);
       setReport(r);
       setLoading(false);
     };
     load();
-  }, [activePersona.id, windowSize]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personaFingerprint, windowSize]);
 
   const severityOrder: Record<string, number> = {
     HIGH_RISK: 0, MODERATE_WARNING: 1, HEALTHY_TREND: 2

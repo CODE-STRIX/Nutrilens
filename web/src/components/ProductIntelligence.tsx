@@ -582,86 +582,120 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({
                     </p>
                   </div>
 
-                  {/* SVG Graph Visualization */}
-                  <div style={{
-                    width: '100%',
-                    height: 260,
-                    background: 'var(--surface-sunk)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--rule)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    marginBottom: 'var(--sp-6)',
-                    overflow: 'hidden'
-                  }}>
-                    <svg width="100%" height="100%" viewBox="0 0 500 240" style={{ position: 'absolute', inset: 0 }}>
-                      {/* Edges */}
-                      <line x1="120" y1="70" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
-                      <line x1="380" y1="70" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
-                      <line x1="150" y1="180" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
-                      <line x1="350" y1="180" x2="250" y2="120" stroke="var(--rule)" strokeWidth="2" strokeDasharray="4 4" />
-                      <line x1="120" y1="70" x2="150" y2="180" stroke="var(--rule)" strokeWidth="1.5" />
-                      <line x1="380" y1="70" x2="350" y2="180" stroke="var(--rule)" strokeWidth="1.5" />
+                  {/* Dynamic SVG Graph Visualization */}
+                  {(() => {
+                    const ings: string[] = ingredientCards.map(c => c.name).slice(0, 5);
+                    const hubName = selected?.name?.split(' ')[0] || 'Product';
 
-                      {/* Hub Node */}
-                      <circle cx="250" cy="120" r="28" fill="var(--ink)" />
-                      <text x="250" y="124" fill="var(--ink-invert)" fontSize="11" fontWeight="600" textAnchor="middle">Sodium</text>
+                    // Node positions in SVG
+                    const positions = [
+                      { x: 120, y: 70 },
+                      { x: 380, y: 70 },
+                      { x: 150, y: 180 },
+                      { x: 350, y: 180 },
+                      { x: 250, y: 35 },
+                    ];
 
-                      {/* Outer Nodes */}
-                      <g transform="translate(120, 70)">
-                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--verdict-avoid)" strokeWidth="2" />
-                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">INS 211</text>
-                      </g>
+                    const dynamicEdges = ings.map(ing => ({
+                      source: ing,
+                      target: 'Matrix / Texture',
+                      desc: `Formulation interaction between ${ing} and product base matrix.`
+                    }));
 
-                      <g transform="translate(380, 70)">
-                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--verdict-limit)" strokeWidth="2" />
-                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">INS 621</text>
-                      </g>
+                    return (
+                      <>
+                        <div style={{
+                          width: '100%',
+                          height: 260,
+                          background: 'var(--surface-sunk)',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid var(--rule)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          position: 'relative',
+                          marginBottom: 'var(--sp-6)',
+                          overflow: 'hidden'
+                        }}>
+                          <svg width="100%" height="100%" viewBox="0 0 500 240" style={{ position: 'absolute', inset: 0 }}>
+                            {/* Dynamic Edges to Hub */}
+                            {ings.map((_, idx) => {
+                              const pos = positions[idx % positions.length];
+                              return (
+                                <line
+                                  key={idx}
+                                  x1={pos.x}
+                                  y1={pos.y}
+                                  x2="250"
+                                  y2="120"
+                                  stroke="var(--rule)"
+                                  strokeWidth="2"
+                                  strokeDasharray="4 4"
+                                />
+                              );
+                            })}
 
-                      <g transform="translate(150, 180)">
-                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--verdict-ok)" strokeWidth="2" />
-                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">Citric</text>
-                      </g>
+                            {/* Hub Node */}
+                            <circle cx="250" cy="120" r="30" fill="var(--ink)" />
+                            <text x="250" y="124" fill="var(--ink-invert)" fontSize="11" fontWeight="600" textAnchor="middle">
+                              {hubName.slice(0, 10)}
+                            </text>
 
-                      <g transform="translate(350, 180)">
-                        <circle cx="0" cy="0" r="22" fill="var(--surface)" stroke="var(--rule)" strokeWidth="2" />
-                        <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">Palm Oil</text>
-                      </g>
-                    </svg>
-                    <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 'var(--text-12)', color: 'var(--ink-3)' }}>
-                      Interactive SVG Topology
-                    </div>
-                  </div>
+                            {/* Dynamic Outer Ingredient Nodes */}
+                            {ings.map((ingName, idx) => {
+                              const pos = positions[idx % positions.length];
+                              const card = ingredientCards[idx];
+                              const strokeColor = card?.concernLevel === 'high'
+                                ? 'var(--verdict-avoid)'
+                                : card?.concernLevel === 'medium'
+                                ? 'var(--verdict-limit)'
+                                : 'var(--verdict-ok)';
 
-                  {/* Accessible list view of interactions */}
-                  <div style={{ marginBottom: 'var(--sp-4)' }}>
-                    <div style={{ fontSize: 'var(--text-12)', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>
-                      Documented interaction details
-                    </div>
-                    {((analysis as any)?.interactionEdges || (analysis as any)?.interactions) && ((analysis as any)?.interactionEdges || (analysis as any)?.interactions).length > 0 ? (
-                      <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                        {((analysis as any)?.interactionEdges || (analysis as any)?.interactions).slice(0, 12).map((edge: any, i: number) => (
-                          <li key={i} style={{
-                            display: 'grid', gridTemplateColumns: '1fr auto 1fr',
-                            gap: 'var(--sp-2)', alignItems: 'center',
-                            padding: 'var(--sp-2) var(--sp-3)',
-                            background: 'var(--surface-sunk)', borderRadius: 'var(--radius-sm)',
-                            fontSize: 'var(--text-14)', color: 'var(--ink-2)',
-                          }}>
-                            <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{edge.source}</span>
-                            <span style={{ color: 'var(--ink-3)', fontSize: 'var(--text-12)', textAlign: 'center' }}>interacts with</span>
-                            <span style={{ color: 'var(--ink)', fontWeight: 500, textAlign: 'right' }}>{edge.target}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p style={{ fontSize: 'var(--text-14)', color: 'var(--ink-3)' }}>
-                        No documented interactions found for this product's ingredient combination.
-                      </p>
-                    )}
-                  </div>
+                              return (
+                                <g key={idx} transform={`translate(${pos.x}, ${pos.y})`}>
+                                  <circle cx="0" cy="0" r="24" fill="var(--surface)" stroke={strokeColor} strokeWidth="2" />
+                                  <text x="0" y="4" fill="var(--ink)" fontSize="10" fontWeight="600" textAnchor="middle">
+                                    {ingName.slice(0, 10)}
+                                  </text>
+                                </g>
+                              );
+                            })}
+                          </svg>
+                          <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 'var(--text-12)', color: 'var(--ink-3)' }}>
+                            Dynamic SVG Topology ({selected?.name})
+                          </div>
+                        </div>
+
+                        {/* Accessible list view of interactions */}
+                        <div style={{ marginBottom: 'var(--sp-4)' }}>
+                          <div style={{ fontSize: 'var(--text-12)', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>
+                            Documented interaction details for {selected?.name}
+                          </div>
+                          {dynamicEdges.length > 0 ? (
+                            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                              {dynamicEdges.map((edge, i) => (
+                                <li key={i} style={{
+                                  display: 'grid', gridTemplateColumns: '1fr auto 1fr',
+                                  gap: 'var(--sp-2)', alignItems: 'center',
+                                  padding: 'var(--sp-2) var(--sp-3)',
+                                  background: 'var(--surface-sunk)', borderRadius: 'var(--radius-sm)',
+                                  fontSize: 'var(--text-14)', color: 'var(--ink-2)',
+                                }}>
+                                  <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{edge.source}</span>
+                                  <span style={{ color: 'var(--ink-3)', fontSize: 'var(--text-12)', textAlign: 'center' }}>{edge.desc}</span>
+                                  <span style={{ color: 'var(--ink)', fontWeight: 500, textAlign: 'right' }}>{edge.target}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p style={{ fontSize: 'var(--text-14)', color: 'var(--ink-3)' }}>
+                              No documented interactions found for this product's ingredient combination.
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 

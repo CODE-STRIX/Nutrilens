@@ -197,15 +197,20 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({
     load();
   }, [initialProductId]);
 
-  // Re-run scoring when persona changes
+  // Re-run scoring whenever the persona or any of its health conditions/allergies change.
+  // Using a JSON fingerprint as the dep ensures edits within the same persona ID still trigger.
+  const personaFingerprint = JSON.stringify({
+    id: activePersona.id,
+    conditions: (activePersona as any).healthConditions ?? [],
+    allergies: (activePersona as any).allergies ?? [],
+    diet: (activePersona as any).dietaryPreferences ?? [],
+  });
   useEffect(() => {
     if (selected) {
-      const scoreRes = scoreProduct(selected, activePersona);
-      if (analysis) {
-        setAnalysis(prev => prev ? { ...prev, personalizedScore: scoreRes.score } : null);
-      }
+      setAnalysis(prev => prev ? { ...prev, personalizedScore: scoreProduct(selected, activePersona).score } : null);
     }
-  }, [activePersona.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personaFingerprint]);
 
   const selectProduct = async (product: Product, productList?: Product[]) => {
     setSelected(product);
@@ -268,8 +273,9 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({
   }
 
   const scoreRes = selected ? scoreProduct(selected, activePersona) : null;
-  const score = analysis?.personalizedScore ?? scoreRes?.score ?? 0;
-  const band = score >= 80 ? 'good' : score >= 60 ? 'okay' : score >= 40 ? 'limit' : 'avoid';
+  // Always use live-computed score — never the stale cached value from analysis state
+  const score = scoreRes?.score ?? 0;
+  const band = scoreRes?.band ?? (score >= 80 ? 'good' : score >= 60 ? 'okay' : score >= 40 ? 'limit' : 'avoid');
 
   // Build ingredient cards from product data + additives knowledge base
   const ingredientCards: IngCard[] = (() => {

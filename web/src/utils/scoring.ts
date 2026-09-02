@@ -86,20 +86,19 @@ export function scoreProduct(
   let confidence: ConfidenceLevel = 'high';
   let basis: NutrientBasis = 'per_100g';
 
-  // ── Determine nutrient values (prefer per 100g) ──────────────────────────
-  // Use recentScan nutrient fields; fall back to 0 with partial confidence
+  // ── Determine nutrient values (support both OFF nutriments and local nutrition schema) ──
   const nutriments = (product as any).nutriments || {};
+  const nutrition = (product as any).nutrition || {};
 
-  const sodiumMg: number      = nutriments.sodium_100g     ?? nutriments.sodium     ?? 0;
-  const sugarsG: number       = nutriments.sugars_100g     ?? nutriments.sugars     ?? 0;
-  const satFatG: number       = nutriments['saturated-fat_100g'] ?? nutriments['saturated-fat'] ?? 0;
-  const energyKcal: number    = nutriments['energy-kcal_100g']   ?? nutriments['energy-kcal']   ?? 0;
-  const fibreG: number        = nutriments.fiber_100g      ?? nutriments.fiber      ?? 0;
-  const proteinG: number      = nutriments.proteins_100g   ?? nutriments.proteins   ?? 0;
+  const sodiumMg: number      = nutriments.sodium_100g     ?? nutriments.sodium     ?? nutrition.sodiumMg      ?? (product as any).sodiumMg      ?? 0;
+  const sugarsG: number       = nutriments.sugars_100g     ?? nutriments.sugars     ?? nutrition.sugarGrams     ?? (product as any).sugarGrams     ?? 0;
+  const satFatG: number       = nutriments['saturated-fat_100g'] ?? nutriments['saturated-fat'] ?? nutrition.saturatedFatGrams ?? (product as any).saturatedFatGrams ?? 0;
+  const energyKcal: number    = nutriments['energy-kcal_100g']   ?? nutriments['energy-kcal']   ?? nutrition.calories        ?? (product as any).calories        ?? 0;
+  const fibreG: number        = nutriments.fiber_100g      ?? nutriments.fiber      ?? nutrition.fiberGrams      ?? (product as any).fiberGrams      ?? 0;
+  const proteinG: number      = nutriments.proteins_100g   ?? nutriments.proteins   ?? nutrition.proteinGrams    ?? (product as any).proteinGrams    ?? 0;
 
-  // If core nutriment fields are all zero and product has no nutriments key,
-  // drop to partial confidence
-  if (!(product as any).nutriments && !(product as any).sodiumMg && !(product as any).sugarGrams) {
+  // Drop to partial confidence only if no nutrition sources exist at all
+  if (!(product as any).nutriments && !(product as any).nutrition && !(product as any).sodiumMg && !(product as any).sugarGrams) {
     confidence = 'partial';
   }
 
@@ -191,8 +190,20 @@ export function scoreProduct(
     });
   }
 
+  // ── Extract ingredients text and additive codes (supports both OFF strings and local JSON arrays) ──
+  const rawIngredientsArray = Array.isArray((product as any).ingredients) ? (product as any).ingredients : [];
+  const ingredientsArrayText = rawIngredientsArray.map((ing: any) => ing.name || '').join(', ');
+
+  const productIngredientText: string = (product as any).ingredients_text || (product as any).ingredientsText || ingredientsArrayText;
+
+  const rawAdditiveCodes: string[] = (product as any).additiveCodes || (product as any).additives_tags || [];
+  const localAdditiveCodes: string[] = rawIngredientsArray
+    .filter((ing: any) => ing.insCode || ing.isAdditive)
+    .map((ing: any) => ing.insCode || ing.name);
+
+  const additives: string[] = Array.from(new Set([...rawAdditiveCodes, ...localAdditiveCodes]));
+
   // Zero additives bonus: +4
-  const additives: string[] = (product as any).additiveCodes || [];
   if (additives.length === 0) {
     score += 4;
     breakdown.push({
@@ -258,7 +269,6 @@ export function scoreProduct(
 
   // ── Allergen Block ────────────────────────────────────────────────────────
   const productAllergens: string[] = (product as any).allergenCodes || [];
-  const productIngredientText: string = (product as any).ingredients_text || (product as any).ingredientsText || '';
   const personaAllergens = persona.allergies || [];
 
   let blocked = false;

@@ -189,11 +189,19 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
   const [sortCol, setSortCol] = useState<'score' | 'sodium' | 'date'>('date');
   const [sortAsc, setSortAsc] = useState(false);
 
+  // Full persona fingerprint — triggers reload when conditions/allergies change within the same profile ID
+  const personaFingerprint = JSON.stringify({
+    id: activePersona.id,
+    conditions: (activePersona as any).healthConditions ?? [],
+    allergies: (activePersona as any).allergies ?? [],
+    diet: (activePersona as any).dietaryPreferences ?? [],
+  });
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       const [dash, pats] = await Promise.all([
-        WebApiService.getDashboard(activePersona.id),
+        WebApiService.getDashboard(activePersona.id, activePersona),
         WebApiService.getPatternIntelligence(activePersona.id)
       ]);
       setData(dash);
@@ -201,7 +209,8 @@ export const ProgressDashboard: React.FC<ProgressDashboardProps> = ({
       setLoading(false);
     };
     load();
-  }, [activePersona.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [personaFingerprint]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -68,7 +68,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       {/* Preset Personas Quick Switch */}
       <div className="card" style={{ marginBottom: 'var(--sp-8)' }}>
         <div style={{ fontSize: 'var(--text-12)', fontWeight: 600, color: 'var(--ink-3)', marginBottom: 'var(--sp-3)' }}>
-          Preset Health Personas (Click to activate)
+          Preset health personas (click to activate)
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 'var(--sp-4)' }}>
           {DEMO_PERSONAS.map(p => {

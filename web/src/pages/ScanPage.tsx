@@ -70,9 +70,22 @@ const ScanPage: React.FC<ScanPageProps> = ({ activePersona, onNavigateToIntellig
   const [queryInput, setQueryInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Store only the raw product + base analysis; score is always re-derived live from activePersona
   const [result, setResult] = useState<{ product: Product; analysis: PersonalizedAnalysisResult } | null>(null);
   const [revealStage, setRevealStage] = useState(0); // 0=hidden 1=name 2=score 3=alerts 4=done
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Re-announce to screen readers whenever persona changes while a result is showing
+  React.useEffect(() => {
+    if (result) {
+      const scoreRes = scoreProduct(result.product, activePersona);
+      const liveRegion = document.getElementById('scan-status');
+      if (liveRegion) {
+        liveRegion.textContent = `Scores recalculated for ${activePersona.name}. ${result.product.name} now scores ${scoreRes.score} out of 100.`;
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePersona]);
 
   // ── Analysis ───────────────────────────────────────────────────────────────
 
@@ -149,9 +162,10 @@ const ScanPage: React.FC<ScanPageProps> = ({ activePersona, onNavigateToIntellig
   const renderResult = () => {
     if (!result) return null;
     const { product, analysis } = result;
-    const score = analysis?.personalizedScore ?? 0;
-    const band = score >= 80 ? 'good' : score >= 60 ? 'okay' : score >= 40 ? 'limit' : 'avoid';
+    // Always derive score live from current persona — this is what makes switching profiles instantly recompute
     const scoreRes = scoreProduct(product, activePersona);
+    const score = scoreRes.score;
+    const band = scoreRes.band;
 
     return (
       <div style={{ marginTop: 'var(--sp-8)' }}>

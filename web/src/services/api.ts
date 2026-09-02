@@ -22,6 +22,7 @@ import { ComparisonResult, AlternativeRecommendation } from '@shared/types/perso
 
 import sampleProducts from '../../../data/indian-food-products.json';
 import sampleLessons from '../../../data/learning-lessons.json';
+import { scoreProduct } from '../utils/scoring';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
 const BASE_URL = (import.meta as any).env?.VITE_API_URL || '/api';
@@ -43,31 +44,71 @@ const fastFetch = async (url: string, options: RequestInit = {}): Promise<Respon
 // ── Person A: WebApiService (Features 2,3,5,6,7,10,11) ─────────────────────
 export const WebApiService = {
   // --- Progress Dashboard (Feature 6) ---
-  getDashboard: async (userId: string = 'usr-demo-rahul'): Promise<ProgressDashboardData> => {
+  getDashboard: async (userId: string = 'usr-demo-rahul', persona?: UserProfile): Promise<ProgressDashboardData> => {
     try {
       const res = await fastFetch(`${API_BASE_URL}/dashboard`, {
         headers: { 'Authorization': `Bearer demo-token` }
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const serverData = await res.json();
+        // Re-score server rows with the current persona if provided
+        if (persona && Array.isArray(serverData.recentScans)) {
+          const products = sampleProducts as unknown as Product[];
+          serverData.recentScans = serverData.recentScans.map((scan: any) => {
+            const prod = products.find((p: any) => p.id === scan.productId);
+            if (prod) {
+              scan.personalizedScore = scoreProduct(prod as any, persona).score;
+            }
+            return scan;
+          });
+          if (serverData.recentScans.length > 0) {
+            serverData.runningAverageScore = Math.round(
+              serverData.recentScans.reduce((s: number, r: any) => s + r.personalizedScore, 0) /
+              serverData.recentScans.length
+            );
+          }
+        }
+        return serverData;
+      }
     } catch {
       // Fallback if backend is offline
     }
 
+    // ── Offline fallback: re-score using the actual product data + current persona ──
+    const products = sampleProducts as unknown as Product[];
+
+    // Seed scan records reference products by ID; look them up for accurate nutriment data
+    const seedScans = [
+      { id: 's1', userId, productId: 'prod-maggi-2min',        productName: 'Maggi 2-Minute Noodles',    brand: 'Nestlé',           category: 'Instant Noodles',   scannedAt: new Date().toISOString(),                           sodiumMg: 850, sugarGrams: 1.5, saturatedFatGrams: 5.2, fiberGrams: 2.1, hasAdditives: true },
+      { id: 's2', userId, productId: 'prod-muesli-whole-grain', productName: 'Whole Grain Millet Muesli', brand: 'TrueElements',      category: 'Breakfast Cereals', scannedAt: new Date(Date.now() - 86400000).toISOString(),      sodiumMg: 45,  sugarGrams: 4.5, saturatedFatGrams: 0.5, fiberGrams: 7.5, hasAdditives: false },
+      { id: 's3', userId, productId: 'prod-lays-magic-masala',  productName: "Lay's Magic Masala Chips",  brand: 'PepsiCo',           category: 'Potato Chips',      scannedAt: new Date(Date.now() - 2 * 86400000).toISOString(),  sodiumMg: 240, sugarGrams: 1.2, saturatedFatGrams: 4.1, fiberGrams: 1.0, hasAdditives: true },
+      { id: 's4', userId, productId: 'prod-bikaner-local-sev',  productName: 'Local Bikaneri Besan Sev',  brand: 'Shree Ram Namkeen', category: 'Regional Snacks',   scannedAt: new Date(Date.now() - 3 * 86400000).toISOString(),  sodiumMg: 310, sugarGrams: 0.5, saturatedFatGrams: 2.5, fiberGrams: 2.5, hasAdditives: false },
+    ];
+
+    const recentScans = seedScans.map(scan => {
+      const prod = products.find((p: any) => p.id === scan.productId);
+      const personalizedScore = prod && persona
+        ? scoreProduct(prod as any, persona).score
+        : prod
+          ? scoreProduct(prod as any, { id: userId, name: 'Default', healthConditions: [], allergies: [], dietaryPreferences: [] } as any).score
+          : 50;
+      return { ...scan, personalizedScore };
+    });
+
+    const runningAverageScore = Math.round(
+      recentScans.reduce((s, r) => s + r.personalizedScore, 0) / recentScans.length
+    );
+
     return {
       userId,
       userName: 'Rahul Sharma',
-      runningAverageScore: 40,
+      runningAverageScore,
       totalScans: 10,
       currentStreakDays: 3,
       longestStreakDays: 7,
       scansThisWeek: 4,
-      healthTier: 'NEEDS_ATTENTION',
-      recentScans: [
-        { id: 's1', userId, productId: 'prod-maggi-2min', productName: 'Maggi 2-Minute Noodles', brand: 'Nestlé', category: 'Instant Noodles', scannedAt: new Date().toISOString(), personalizedScore: 17, sodiumMg: 850, sugarGrams: 1.5, saturatedFatGrams: 5.2, fiberGrams: 2.1, hasAdditives: true },
-        { id: 's2', userId, productId: 'prod-muesli-whole-grain', productName: 'Whole Grain Millet Muesli', brand: 'TrueElements', category: 'Breakfast Cereals', scannedAt: new Date(Date.now() - 86400000).toISOString(), personalizedScore: 88, sodiumMg: 45, sugarGrams: 4.5, saturatedFatGrams: 0.5, fiberGrams: 7.5, hasAdditives: false },
-        { id: 's3', userId, productId: 'prod-lays-magic-masala', productName: "Lay's Magic Masala Chips", brand: 'PepsiCo', category: 'Potato Chips', scannedAt: new Date(Date.now() - 2 * 86400000).toISOString(), personalizedScore: 28, sodiumMg: 240, sugarGrams: 1.2, saturatedFatGrams: 4.1, fiberGrams: 1.0, hasAdditives: true },
-        { id: 's4', userId, productId: 'prod-bikaner-local-sev', productName: 'Local Bikaneri Besan Sev', brand: 'Shree Ram Namkeen', category: 'Regional Snacks', scannedAt: new Date(Date.now() - 3 * 86400000).toISOString(), personalizedScore: 45, sodiumMg: 310, sugarGrams: 0.5, saturatedFatGrams: 2.5, fiberGrams: 2.5, hasAdditives: false }
-      ]
+      healthTier: runningAverageScore >= 80 ? 'SUPER_HEALTHY' : runningAverageScore >= 60 ? 'BALANCED' : runningAverageScore >= 40 ? 'NEEDS_ATTENTION' : 'HIGH_RISK_DIET',
+      recentScans,
     };
   },
 

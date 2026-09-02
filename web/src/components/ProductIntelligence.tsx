@@ -388,8 +388,20 @@ export const ProductIntelligence: React.FC<ProductIntelligenceProps> = ({
             />
           </div>
 
-          {/* Product list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)', maxHeight: 480, overflowY: 'auto' }}>
+          {/* Product list with sleek scrollbar */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--sp-2)',
+              maxHeight: 480,
+              overflowY: 'auto',
+              paddingRight: 'var(--sp-2)',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'var(--rule) transparent'
+            }}
+            className="custom-scrollbar"
+          >
             {filteredProducts.map(product => {
               const isActive = selected?.id === product.id;
               const ps = scoreProduct(product, activePersona);
